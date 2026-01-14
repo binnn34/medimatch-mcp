@@ -284,15 +284,20 @@ async def search_nearby_hospitals(
 
 @mcp.tool
 async def search_hospitals_near_place(
-    place: Annotated[str, "장소명 (예: '홍대', '강남역', '서울역')"],
+    place: Annotated[str, "장소명 (예: '홍대', '강남역', '광주 첨단', '부산 서면')"],
     department: Annotated[Optional[str], "진료과목 (예: '피부과', '정형외과')"] = None,
-    radius: Annotated[int, "검색 반경 (미터, 기본값: 3000)"] = 3000,
+    radius: Annotated[int, "검색 반경 (미터, 기본값: 5000)"] = 5000,
 ) -> dict:
     """
     특정 장소 주변의 병원을 검색합니다.
 
-    "홍대 근처 피부과", "강남역 주변 정형외과" 같은 요청에 사용합니다.
-    장소명을 입력하면 자동으로 좌표를 찾아서 주변 병원을 검색합니다.
+    전국 어디든 장소명을 입력하면 주변 병원을 찾아드립니다.
+    예시:
+    - 서울: "홍대", "강남역", "신촌", "잠실"
+    - 광주: "광주 첨단", "상무지구", "충장로"
+    - 부산: "서면", "해운대", "센텀시티"
+    - 대구: "동성로", "수성구"
+    - 기타: "판교", "수원역", "제주시"
     """
     # 장소명 → 좌표 변환
     location = await kakao_client.get_coordinates_from_place(place)
@@ -301,7 +306,9 @@ async def search_hospitals_near_place(
         return {
             "success": False,
             "error": location.get("error", f"'{place}'의 위치를 찾을 수 없습니다."),
-            "suggestion": "더 구체적인 장소명을 입력해주세요. (예: '홍대입구역', '강남역 2번출구')",
+            "tried_queries": location.get("tried_queries", []),
+            "suggestion": location.get("suggestion", "더 구체적인 장소명을 입력해주세요."),
+            "examples": ["홍대입구역", "강남역", "광주 첨단", "부산 서면", "대구 동성로"],
         }
 
     x, y = location["x"], location["y"]
@@ -316,6 +323,15 @@ async def search_hospitals_near_place(
 
     if result["success"]:
         hospitals = result.get("hospitals", [])
+
+        # 결과가 없으면 반경 확대 시도
+        if not hospitals and radius < 10000:
+            result = await kakao_client.get_nearby_hospitals(
+                x=x, y=y, radius=10000, department=department
+            )
+            hospitals = result.get("hospitals", [])
+            if hospitals:
+                radius = 10000
 
         # 길찾기 URL 추가
         for hospital in hospitals:
@@ -349,14 +365,15 @@ async def search_hospitals_near_place(
 
 @mcp.tool
 async def search_nearby_with_pharmacy_by_place(
-    place: Annotated[str, "장소명 (예: '홍대', '신촌역', '강남')"],
+    place: Annotated[str, "장소명 (예: '홍대', '강남역', '광주 첨단', '부산 서면')"],
     department: Annotated[Optional[str], "진료과목 (예: '피부과', '내과')"] = None,
-    radius: Annotated[int, "검색 반경 (미터, 기본값: 3000)"] = 3000,
+    radius: Annotated[int, "검색 반경 (미터, 기본값: 5000)"] = 5000,
 ) -> dict:
     """
     특정 장소 주변의 병원과 약국을 함께 검색합니다.
 
-    "홍대 근처 병원이랑 약국 찾아줘" 같은 요청에 사용합니다.
+    전국 어디든 장소명을 입력하면 주변 병원과 약국을 함께 찾아드립니다.
+    예시: "홍대 근처 병원이랑 약국", "광주 첨단 피부과랑 약국"
     """
     # 장소명 → 좌표 변환
     location = await kakao_client.get_coordinates_from_place(place)
@@ -365,7 +382,9 @@ async def search_nearby_with_pharmacy_by_place(
         return {
             "success": False,
             "error": location.get("error", f"'{place}'의 위치를 찾을 수 없습니다."),
-            "suggestion": "더 구체적인 장소명을 입력해주세요.",
+            "tried_queries": location.get("tried_queries", []),
+            "suggestion": location.get("suggestion", "더 구체적인 장소명을 입력해주세요."),
+            "examples": ["홍대입구역", "강남역", "광주 첨단", "부산 서면"],
         }
 
     x, y = location["x"], location["y"]

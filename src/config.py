@@ -12,6 +12,14 @@ KAKAO_REST_API_KEY = os.getenv("KAKAO_REST_API_KEY", "")
 KAKAO_LOCAL_API_URL = "https://dapi.kakao.com/v2/local"
 KAKAO_KEYWORD_SEARCH_URL = f"{KAKAO_LOCAL_API_URL}/search/keyword.json"
 KAKAO_CATEGORY_SEARCH_URL = f"{KAKAO_LOCAL_API_URL}/search/category.json"
+KAKAO_ADDRESS_SEARCH_URL = f"{KAKAO_LOCAL_API_URL}/search/address.json"
+
+# 기본 좌표 (서울 시청) - "내 주변" 요청 시 기본값으로 사용
+DEFAULT_LOCATION = {
+    "x": "126.9784",
+    "y": "37.5665",
+    "name": "서울 시청"
+}
 
 # 카카오 카테고리 코드
 KAKAO_CATEGORY_CODES = {

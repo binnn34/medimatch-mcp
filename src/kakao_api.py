@@ -6,7 +6,9 @@ from .config import (
     KAKAO_REST_API_KEY,
     KAKAO_KEYWORD_SEARCH_URL,
     KAKAO_CATEGORY_SEARCH_URL,
+    KAKAO_ADDRESS_SEARCH_URL,
     KAKAO_CATEGORY_CODES,
+    DEFAULT_LOCATION,
 )
 
 
@@ -19,6 +21,79 @@ class KakaoLocalAPIClient:
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or KAKAO_REST_API_KEY
         self.headers = {"Authorization": f"KakaoAK {self.api_key}"}
+
+    async def get_coordinates_from_place(self, place_name: str) -> dict:
+        """
+        장소명/주소를 좌표로 변환
+
+        Args:
+            place_name: 장소명 또는 주소 (예: "홍대", "강남역", "서울시 강남구")
+
+        Returns:
+            좌표 정보 딕셔너리
+        """
+        # 먼저 키워드 검색으로 장소 찾기
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.get(
+                    KAKAO_KEYWORD_SEARCH_URL,
+                    params={"query": place_name, "size": 1},
+                    headers=self.headers,
+                )
+                response.raise_for_status()
+                data = response.json()
+
+                documents = data.get("documents", [])
+                if documents:
+                    place = documents[0]
+                    return {
+                        "success": True,
+                        "x": place.get("x"),
+                        "y": place.get("y"),
+                        "place_name": place.get("place_name", place_name),
+                        "address": place.get("address_name", ""),
+                    }
+
+                # 키워드 검색 실패 시 주소 검색 시도
+                response = await client.get(
+                    KAKAO_ADDRESS_SEARCH_URL,
+                    params={"query": place_name},
+                    headers=self.headers,
+                )
+                response.raise_for_status()
+                data = response.json()
+
+                documents = data.get("documents", [])
+                if documents:
+                    addr = documents[0]
+                    return {
+                        "success": True,
+                        "x": addr.get("x"),
+                        "y": addr.get("y"),
+                        "place_name": place_name,
+                        "address": addr.get("address_name", ""),
+                    }
+
+                return {
+                    "success": False,
+                    "error": f"'{place_name}'의 위치를 찾을 수 없습니다.",
+                }
+
+        except Exception as e:
+            return {
+                "success": False,
+                "error": f"좌표 변환 오류: {str(e)}",
+            }
+
+    def get_default_location(self) -> dict:
+        """기본 위치(서울 시청) 반환"""
+        return {
+            "success": True,
+            "x": DEFAULT_LOCATION["x"],
+            "y": DEFAULT_LOCATION["y"],
+            "place_name": DEFAULT_LOCATION["name"],
+            "address": "서울특별시 중구 세종대로 110",
+        }
 
     async def search_keyword(
         self,

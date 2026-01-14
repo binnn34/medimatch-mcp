@@ -283,6 +283,142 @@ async def search_nearby_hospitals(
 
 
 @mcp.tool
+async def search_hospitals_near_place(
+    place: Annotated[str, "장소명 (예: '홍대', '강남역', '서울역')"],
+    department: Annotated[Optional[str], "진료과목 (예: '피부과', '정형외과')"] = None,
+    radius: Annotated[int, "검색 반경 (미터, 기본값: 3000)"] = 3000,
+) -> dict:
+    """
+    특정 장소 주변의 병원을 검색합니다.
+
+    "홍대 근처 피부과", "강남역 주변 정형외과" 같은 요청에 사용합니다.
+    장소명을 입력하면 자동으로 좌표를 찾아서 주변 병원을 검색합니다.
+    """
+    # 장소명 → 좌표 변환
+    location = await kakao_client.get_coordinates_from_place(place)
+
+    if not location["success"]:
+        return {
+            "success": False,
+            "error": location.get("error", f"'{place}'의 위치를 찾을 수 없습니다."),
+            "suggestion": "더 구체적인 장소명을 입력해주세요. (예: '홍대입구역', '강남역 2번출구')",
+        }
+
+    x, y = location["x"], location["y"]
+    radius = min(radius, 20000)
+
+    result = await kakao_client.get_nearby_hospitals(
+        x=x,
+        y=y,
+        radius=radius,
+        department=department,
+    )
+
+    if result["success"]:
+        hospitals = result.get("hospitals", [])
+
+        # 길찾기 URL 추가
+        for hospital in hospitals:
+            coords = hospital.get("coordinates", {})
+            if coords.get("x") and coords.get("y"):
+                hospital["directions_url"] = kakao_client.generate_directions_url(
+                    dest_name=hospital.get("name", ""),
+                    dest_x=coords["x"],
+                    dest_y=coords["y"],
+                    origin_x=x,
+                    origin_y=y,
+                )
+
+        return {
+            "success": True,
+            "search_location": {
+                "query": place,
+                "resolved_name": location.get("place_name", place),
+                "address": location.get("address", ""),
+                "coordinates": {"x": x, "y": y},
+            },
+            "radius": radius,
+            "department": department or "전체",
+            "total_count": len(hospitals),
+            "hospitals": hospitals,
+            "tip": "카카오맵 URL을 클릭하면 병원 상세 정보와 리뷰를 확인할 수 있습니다.",
+        }
+
+    return result
+
+
+@mcp.tool
+async def search_nearby_with_pharmacy_by_place(
+    place: Annotated[str, "장소명 (예: '홍대', '신촌역', '강남')"],
+    department: Annotated[Optional[str], "진료과목 (예: '피부과', '내과')"] = None,
+    radius: Annotated[int, "검색 반경 (미터, 기본값: 3000)"] = 3000,
+) -> dict:
+    """
+    특정 장소 주변의 병원과 약국을 함께 검색합니다.
+
+    "홍대 근처 병원이랑 약국 찾아줘" 같은 요청에 사용합니다.
+    """
+    # 장소명 → 좌표 변환
+    location = await kakao_client.get_coordinates_from_place(place)
+
+    if not location["success"]:
+        return {
+            "success": False,
+            "error": location.get("error", f"'{place}'의 위치를 찾을 수 없습니다."),
+            "suggestion": "더 구체적인 장소명을 입력해주세요.",
+        }
+
+    x, y = location["x"], location["y"]
+    radius = min(radius, 20000)
+
+    result = await hospital_client.search_nearby_with_pharmacy(
+        x=x,
+        y=y,
+        radius=radius,
+        department=department,
+    )
+
+    if result["success"]:
+        hospitals = result.get("hospitals", [])
+        pharmacies = result.get("pharmacies", [])
+
+        # 길찾기 URL 추가
+        for item in hospitals + pharmacies:
+            coords = item.get("coordinates", {})
+            if coords.get("x") and coords.get("y"):
+                item["directions_url"] = kakao_client.generate_directions_url(
+                    dest_name=item.get("name", ""),
+                    dest_x=coords["x"],
+                    dest_y=coords["y"],
+                    origin_x=x,
+                    origin_y=y,
+                )
+
+        return {
+            "success": True,
+            "search_location": {
+                "query": place,
+                "resolved_name": location.get("place_name", place),
+                "address": location.get("address", ""),
+                "coordinates": {"x": x, "y": y},
+            },
+            "radius": radius,
+            "department": department,
+            "hospitals": {
+                "count": len(hospitals),
+                "list": hospitals,
+            },
+            "pharmacies": {
+                "count": len(pharmacies),
+                "list": pharmacies,
+            },
+            "tip": "진료 후 가까운 약국에서 처방전을 받으세요.",
+        }
+
+    return result
+
+
+@mcp.tool
 async def search_nearby_with_pharmacy(
     x: Annotated[str, "현재 위치 경도 (longitude)"],
     y: Annotated[str, "현재 위치 위도 (latitude)"],

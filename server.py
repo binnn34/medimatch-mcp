@@ -131,13 +131,14 @@ async def search_hospitals(
 @mcp.tool
 async def find_specialist_hospital(
     symptoms: Annotated[str, "증상 또는 질환명 (예: '아토피', '허리디스크', '무릎 관절염')"],
-    region: Annotated[Optional[str], "지역 (예: '서울', '경기')"] = None,
-    limit: Annotated[int, "결과 개수 (기본값: 5)"] = 5,
+    region: Annotated[Optional[str], "지역 (예: '서울', '강남', '광주 봉선동', '부산 서면')"] = None,
+    limit: Annotated[int, "결과 개수 (기본값: 10)"] = 10,
 ) -> dict:
     """
     증상이나 질환명을 입력하면 해당 질환을 전문으로 진료하는 병원을 찾아줍니다.
 
-    일반적인 진료과목 검색과 달리, 특정 질환에 특화된 병원을 추천합니다.
+    카카오맵 API를 사용하여 대학병원뿐만 아니라 개인 병원/의원도 모두 검색됩니다.
+    지역은 "서울", "강남", "광주 봉선동", "부산 서면" 등 다양한 형식으로 입력 가능합니다.
     예: "아토피" → 아토피/알레르기 전문 피부과 추천
     """
     # 증상 분석
@@ -150,15 +151,77 @@ async def find_specialist_hospital(
             "suggestion": "더 구체적인 증상을 설명해주시거나, 직접 진료과목을 지정하여 search_hospitals를 사용해주세요.",
         }
 
-    # 주요 추천 진료과목으로 검색
+    # 주요 추천 진료과목
     primary_department = analysis["recommended_departments"][0]
 
-    result = await hospital_client.search_hospitals(
-        department=primary_department,
-        sido=region,
-        page=1,
-        num_of_rows=limit,
-    )
+    # 카카오맵 API 우선 사용 (의원급 병원도 검색됨)
+    hospitals = []
+
+    if region:
+        # 지역이 있으면 카카오맵으로 검색 (의원/병원/클리닉 모두 포함)
+        location = await kakao_client.get_coordinates_from_place(region)
+
+        if location["success"]:
+            x, y = location["x"], location["y"]
+
+            # 진료과목 + 지역으로 검색 (의원 포함)
+            kakao_result = await kakao_client.get_nearby_hospitals(
+                x=x,
+                y=y,
+                radius=10000,  # 10km 반경
+                department=primary_department,
+                size=limit,
+            )
+
+            if kakao_result["success"]:
+                hospitals = kakao_result.get("hospitals", [])
+
+                # 길찾기 URL 추가
+                for hospital in hospitals:
+                    coords = hospital.get("coordinates", {})
+                    if coords.get("x") and coords.get("y"):
+                        hospital["directions_url"] = kakao_client.generate_directions_url(
+                            dest_name=hospital.get("name", ""),
+                            dest_x=coords["x"],
+                            dest_y=coords["y"],
+                            origin_x=x,
+                            origin_y=y,
+                        )
+
+            # 카카오맵에서 결과가 없으면 공공데이터 API도 시도
+            if not hospitals:
+                # 시도 이름 추출 (광주 봉선동 -> 광주)
+                sido_name = region.split()[0] if " " in region else region
+                if sido_name in SIDO_CODES:
+                    public_result = await hospital_client.search_hospitals(
+                        department=primary_department,
+                        sido=sido_name,
+                        page=1,
+                        num_of_rows=limit,
+                    )
+                    if public_result["success"]:
+                        hospitals = public_result.get("hospitals", [])
+        else:
+            # 지역 좌표 변환 실패 시 시도 코드로 검색
+            sido_name = region.split()[0] if " " in region else region
+            if sido_name in SIDO_CODES:
+                public_result = await hospital_client.search_hospitals(
+                    department=primary_department,
+                    sido=sido_name,
+                    page=1,
+                    num_of_rows=limit,
+                )
+                if public_result["success"]:
+                    hospitals = public_result.get("hospitals", [])
+    else:
+        # 지역이 없으면 공공데이터 API로 전국 검색
+        public_result = await hospital_client.search_hospitals(
+            department=primary_department,
+            page=1,
+            num_of_rows=limit,
+        )
+        if public_result["success"]:
+            hospitals = public_result.get("hospitals", [])
 
     return {
         "success": True,
@@ -174,12 +237,12 @@ async def find_specialist_hospital(
             "department": primary_department,
             "region": region or "전국",
         },
-        "hospitals": result.get("hospitals", []),
-        "total_count": result.get("total_count", 0),
+        "hospitals": hospitals,
+        "total_count": len(hospitals),
         "recommendations": {
             "description": symptom_analyzer.get_department_description(primary_department),
             "keywords_to_look_for": analysis["related_keywords"],
-            "tip": "병원 선택 시 '{}' 관련 키워드가 있는 병원을 추천드립니다.".format(
+            "tip": "병원 선택 시 '{}' 관련 키워드가 있는 병원을 추천드립니다. 카카오맵 URL에서 리뷰와 상세정보를 확인하세요.".format(
                 "', '".join(analysis["related_keywords"][:3]) if analysis["related_keywords"] else symptoms
             ),
         },

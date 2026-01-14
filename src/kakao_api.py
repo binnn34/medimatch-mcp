@@ -535,48 +535,73 @@ class KakaoLocalAPIClient:
         y: str,
         radius: int = 3000,
         department: Optional[str] = None,
+        size: int = 15,
     ) -> dict:
         """
-        현재 위치 주변 병원 검색
+        현재 위치 주변 병원 검색 (개인병원/의원 포함)
 
         Args:
             x: 현재 위치 경도
             y: 현재 위치 위도
             radius: 검색 반경 (미터)
             department: 진료과목 (선택)
+            size: 결과 개수 (기본 15, 최대 15)
 
         Returns:
-            주변 병원 목록
+            주변 병원 목록 (거리순, 개인병원/의원 포함)
         """
+        all_hospitals = []
+
         if department:
-            # 진료과목이 있으면 키워드 검색
-            result = await self.search_keyword(
-                query=f"{department} 병원",
-                x=x,
-                y=y,
-                radius=radius,
-                sort="distance",
-            )
+            # 진료과목이 있으면 다양한 검색어로 검색
+            search_queries = [
+                f"{department}",           # "피부과"
+                f"{department} 의원",       # "피부과 의원"
+                f"{department} 병원",       # "피부과 병원"
+                f"{department} 클리닉",     # "피부과 클리닉"
+            ]
+
+            for query in search_queries:
+                result = await self.search_keyword(
+                    query=query,
+                    x=x,
+                    y=y,
+                    radius=radius,
+                    size=15,
+                    sort="distance",
+                )
+                if result["success"]:
+                    for place in result.get("places", []):
+                        # 중복 제거 (ID 기준)
+                        if not any(h.get("id") == place.get("id") for h in all_hospitals):
+                            all_hospitals.append(place)
+
+            # 거리순 정렬
+            all_hospitals.sort(key=lambda h: float(h.get("distance") or "999999"))
+
         else:
-            # 진료과목이 없으면 카테고리 검색
+            # 진료과목이 없으면 카테고리 검색 (모든 병원/의원)
             result = await self.search_category(
                 category="병원",
                 x=x,
                 y=y,
                 radius=radius,
+                size=15,
                 sort="distance",
             )
+            if result["success"]:
+                all_hospitals = result.get("places", [])
 
-        if result["success"]:
-            return {
-                "success": True,
-                "location": {"x": x, "y": y},
-                "radius": radius,
-                "department": department,
-                "hospitals": result.get("places", []),
-            }
+        # 결과 제한
+        all_hospitals = all_hospitals[:size] if size else all_hospitals[:15]
 
-        return result
+        return {
+            "success": True,
+            "location": {"x": x, "y": y},
+            "radius": radius,
+            "department": department,
+            "hospitals": all_hospitals,
+        }
 
     async def get_nearby_pharmacies(
         self,

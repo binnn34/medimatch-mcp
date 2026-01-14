@@ -1,15 +1,23 @@
 """증상 분석 및 진료과목 추천 모듈"""
 import re
-from typing import List, Dict, Tuple, Set
-from .config import SYMPTOM_TO_DEPARTMENT, DEPARTMENT_CODES, DISEASE_KEYWORDS
+from typing import List, Dict, Tuple, Set, Optional
+from .config import (
+    SYMPTOM_TO_DEPARTMENT,
+    DEPARTMENT_CODES,
+    DISEASE_KEYWORDS,
+    SYMPTOM_TO_DISEASE,
+    SINGLE_SYMPTOM_TO_DISEASE,
+)
 
 
 class SymptomAnalyzer:
-    """증상을 분석하여 적절한 진료과목을 추천하는 클래스"""
+    """증상을 분석하여 의심 질병과 진료과목을 추천하는 클래스"""
 
     def __init__(self):
         self.symptom_mapping = SYMPTOM_TO_DEPARTMENT
         self.disease_keywords = DISEASE_KEYWORDS
+        self.symptom_to_disease = SYMPTOM_TO_DISEASE
+        self.single_symptom_to_disease = SINGLE_SYMPTOM_TO_DISEASE
         # 불용어 (매칭에서 제외할 단어들)
         self.stopwords = {'이', '가', '을', '를', '은', '는', '에', '의', '로', '으로', '와', '과', '도', '만', '좀', '너무', '많이', '조금', '약간', '계속', '자꾸', '요즘', '오늘', '어제', '최근'}
 
@@ -35,6 +43,98 @@ class SymptomAnalyzer:
                 substrings.add(normalized[i:i+length])
 
         return substrings
+
+    def diagnose_disease(self, user_input: str) -> Dict:
+        """
+        증상을 분석하여 의심되는 질병(진단)을 반환
+
+        Args:
+            user_input: 사용자가 입력한 증상 설명
+
+        Returns:
+            의심 질병 정보 딕셔너리
+        """
+        normalized_input = self._normalize_text(user_input)
+        input_substrings = self._extract_symptom_keywords(user_input)
+
+        # 1. 복합 증상 매칭 (여러 증상이 함께 나타날 때)
+        matched_combo_diseases = []
+        for symptom_combo, disease_info in self.symptom_to_disease.items():
+            # 증상 조합의 모든 증상이 입력에 포함되는지 확인
+            all_matched = True
+            for symptom in symptom_combo:
+                symptom_normalized = self._normalize_text(symptom)
+                if symptom_normalized not in normalized_input:
+                    # 부분 매칭도 시도
+                    partial_match = any(
+                        symptom_normalized in sub or sub in symptom_normalized
+                        for sub in input_substrings
+                        if len(sub) >= 2
+                    )
+                    if not partial_match:
+                        all_matched = False
+                        break
+
+            if all_matched:
+                matched_combo_diseases.append({
+                    "symptom_combo": symptom_combo,
+                    "diseases": disease_info["diseases"],
+                    "description": disease_info["description"],
+                    "severity": disease_info["severity"],
+                    "departments": disease_info["departments"],
+                    "match_type": "combination",
+                })
+
+        # 2. 단일 증상 매칭
+        matched_single_diseases = []
+        for symptom_key, disease_info in self.single_symptom_to_disease.items():
+            symptom_normalized = self._normalize_text(symptom_key)
+            if symptom_normalized in normalized_input or symptom_normalized in input_substrings:
+                matched_single_diseases.append({
+                    "symptom": symptom_key,
+                    "diseases": disease_info["diseases"],
+                    "description": disease_info["description"],
+                    "severity": disease_info["severity"],
+                    "departments": disease_info["departments"],
+                    "match_type": "single",
+                })
+
+        # 결과 조합 (복합 증상 우선)
+        all_diseases = []
+        all_departments = []
+
+        if matched_combo_diseases:
+            # 복합 증상 매칭이 있으면 우선
+            for match in matched_combo_diseases:
+                all_diseases.extend(match["diseases"])
+                all_departments.extend(match["departments"])
+        elif matched_single_diseases:
+            # 단일 증상 매칭
+            for match in matched_single_diseases:
+                all_diseases.extend(match["diseases"])
+                all_departments.extend(match["departments"])
+
+        # 중복 제거
+        unique_diseases = list(dict.fromkeys(all_diseases))
+        unique_departments = list(dict.fromkeys(all_departments))
+
+        # 가장 관련성 높은 질병 정보
+        primary_diagnosis = None
+        if matched_combo_diseases:
+            primary_diagnosis = matched_combo_diseases[0]
+        elif matched_single_diseases:
+            primary_diagnosis = matched_single_diseases[0]
+
+        return {
+            "has_diagnosis": bool(unique_diseases),
+            "suspected_diseases": unique_diseases[:5],  # 상위 5개
+            "primary_diagnosis": primary_diagnosis,
+            "combo_matches": matched_combo_diseases,
+            "single_matches": matched_single_diseases,
+            "recommended_departments": unique_departments[:3],
+            "severity": primary_diagnosis["severity"] if primary_diagnosis else None,
+            "diagnosis_description": primary_diagnosis["description"] if primary_diagnosis else None,
+        }
 
     def analyze_symptoms(self, user_input: str) -> Dict:
         """

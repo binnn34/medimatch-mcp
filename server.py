@@ -36,37 +36,63 @@ mcp = FastMCP(
 
 @mcp.tool
 async def analyze_symptoms(
-    symptoms: Annotated[str, "증상 설명 (예: '팔꿈치가 가렵고 각질이 일어나요', '허리가 아프고 다리가 저려요')"]
+    symptoms: Annotated[str, "증상 설명 (예: '머리가 어지럽고 귀에서 소리가 나', '허리가 아프고 다리가 저려요')"]
 ) -> dict:
     """
-    사용자의 증상을 분석하여 적절한 진료과목을 추천합니다.
+    사용자의 증상을 분석하여 의심되는 질병과 진료과목을 추천합니다.
 
-    증상을 자연스러운 문장으로 설명하면, AI가 분석하여
-    어떤 진료과목을 방문해야 하는지 추천해드립니다.
+    증상을 자연스러운 문장으로 설명하면:
+    1. 먼저 의심되는 질병명을 알려드립니다
+    2. 그 다음 어떤 진료과목을 방문해야 하는지 추천합니다
+
+    예: "머리가 어지럽고 귀에서 소리가 나" → 메니에르병, 이석증 등 의심
     """
+    # 1. 질병 진단 (우선 수행)
+    diagnosis = symptom_analyzer.diagnose_disease(symptoms)
+
+    # 2. 증상 분석 (진료과목 추천용)
     analysis = symptom_analyzer.analyze_symptoms(symptoms)
 
     # 추천 진료과목에 대한 설명 추가
     department_details = []
-    for dept in analysis["recommended_departments"]:
+    # 질병 진단 결과의 진료과목을 우선 사용
+    recommended_depts = diagnosis["recommended_departments"] if diagnosis["has_diagnosis"] else analysis["recommended_departments"]
+
+    for dept in recommended_depts:
         department_details.append({
             "name": dept,
             "description": symptom_analyzer.get_department_description(dept),
         })
 
-    return {
+    # 응답 구성: 질병 진단 결과를 먼저 보여줌
+    response = {
         "input_symptoms": symptoms,
-        "analysis": {
-            "matched_symptoms": analysis["matched_symptoms"],
-            "confidence": analysis["confidence"],
-            "summary": analysis["analysis_summary"],
-        },
-        "recommendations": {
-            "departments": department_details,
-            "related_keywords": analysis["related_keywords"],
-        },
-        "next_step": "추천된 진료과목으로 병원을 검색하시려면 search_hospitals 또는 find_specialist_hospital을 사용하세요.",
     }
+
+    # 질병 진단 결과가 있으면 먼저 표시
+    if diagnosis["has_diagnosis"]:
+        response["diagnosis"] = {
+            "suspected_diseases": diagnosis["suspected_diseases"],
+            "primary_disease": diagnosis["suspected_diseases"][0] if diagnosis["suspected_diseases"] else None,
+            "severity": diagnosis["severity"],
+            "description": diagnosis["diagnosis_description"],
+            "message": f"입력하신 증상으로 보아 '{', '.join(diagnosis['suspected_diseases'][:3])}' 등이 의심됩니다.",
+        }
+
+    response["analysis"] = {
+        "matched_symptoms": analysis["matched_symptoms"],
+        "confidence": analysis["confidence"],
+        "summary": analysis["analysis_summary"],
+    }
+
+    response["recommendations"] = {
+        "departments": department_details,
+        "related_keywords": analysis["related_keywords"],
+    }
+
+    response["next_step"] = "추천된 진료과목으로 병원을 검색하시려면 search_hospitals 또는 find_specialist_hospital을 사용하세요."
+
+    return response
 
 
 @mcp.tool
@@ -130,21 +156,32 @@ async def search_hospitals(
 
 @mcp.tool
 async def find_specialist_hospital(
-    symptoms: Annotated[str, "증상 또는 질환명 (예: '아토피', '허리디스크', '무릎 관절염')"],
+    symptoms: Annotated[str, "증상 또는 질환명 (예: '머리가 어지럽고 귀에서 소리가 나', '허리디스크', '아토피')"],
     region: Annotated[Optional[str], "지역 (예: '서울', '강남', '광주 봉선동', '부산 서면')"] = None,
     limit: Annotated[int, "결과 개수 (기본값: 10)"] = 10,
 ) -> dict:
     """
-    증상이나 질환명을 입력하면 해당 질환을 전문으로 진료하는 병원을 찾아줍니다.
+    증상이나 질환명을 입력하면:
+    1. 먼저 의심되는 질병명(진단)을 알려드립니다
+    2. 해당 질환을 진료하는 병원을 추천합니다
 
     카카오맵 API를 사용하여 대학병원뿐만 아니라 개인 병원/의원도 모두 검색됩니다.
     지역은 "서울", "강남", "광주 봉선동", "부산 서면" 등 다양한 형식으로 입력 가능합니다.
-    예: "아토피" → 아토피/알레르기 전문 피부과 추천
+
+    예: "머리가 어지럽고 귀에서 소리가 나" → 메니에르병, 이석증 의심 → 이비인후과 추천
     """
-    # 증상 분석
+    # 1. 질병 진단 (우선 수행)
+    diagnosis = symptom_analyzer.diagnose_disease(symptoms)
+
+    # 2. 증상 분석 (진료과목 추천용)
     analysis = symptom_analyzer.analyze_symptoms(symptoms)
 
-    if not analysis["recommended_departments"]:
+    # 질병 진단 결과가 있으면 해당 진료과목 사용, 없으면 증상 분석 결과 사용
+    if diagnosis["has_diagnosis"] and diagnosis["recommended_departments"]:
+        recommended_departments = diagnosis["recommended_departments"]
+    elif analysis["recommended_departments"]:
+        recommended_departments = analysis["recommended_departments"]
+    else:
         return {
             "success": False,
             "error": "입력하신 증상에 해당하는 진료과목을 찾을 수 없습니다.",
@@ -152,7 +189,7 @@ async def find_specialist_hospital(
         }
 
     # 주요 추천 진료과목
-    primary_department = analysis["recommended_departments"][0]
+    primary_department = recommended_departments[0]
 
     # 카카오맵 API 우선 사용 (의원급 병원도 검색됨)
     hospitals = []
@@ -223,30 +260,47 @@ async def find_specialist_hospital(
         if public_result["success"]:
             hospitals = public_result.get("hospitals", [])
 
-    return {
+    # 응답 구성: 질병 진단 결과를 먼저 보여줌
+    response = {
         "success": True,
         "query": symptoms,
-        "analysis": {
-            "detected_symptoms": analysis["matched_symptoms"],
-            "primary_department": primary_department,
-            "all_recommended_departments": analysis["recommended_departments"],
-            "confidence": analysis["confidence"],
-            "summary": analysis["analysis_summary"],
-        },
-        "search_criteria": {
-            "department": primary_department,
-            "region": region or "전국",
-        },
-        "hospitals": hospitals,
-        "total_count": len(hospitals),
-        "recommendations": {
-            "description": symptom_analyzer.get_department_description(primary_department),
-            "keywords_to_look_for": analysis["related_keywords"],
-            "tip": "병원 선택 시 '{}' 관련 키워드가 있는 병원을 추천드립니다. 카카오맵 URL에서 리뷰와 상세정보를 확인하세요.".format(
-                "', '".join(analysis["related_keywords"][:3]) if analysis["related_keywords"] else symptoms
-            ),
-        },
     }
+
+    # 질병 진단 결과가 있으면 먼저 표시 (가장 중요!)
+    if diagnosis["has_diagnosis"]:
+        response["diagnosis"] = {
+            "suspected_diseases": diagnosis["suspected_diseases"],
+            "primary_disease": diagnosis["suspected_diseases"][0] if diagnosis["suspected_diseases"] else None,
+            "severity": diagnosis["severity"],
+            "description": diagnosis["diagnosis_description"],
+            "message": f"입력하신 증상으로 보아 '{', '.join(diagnosis['suspected_diseases'][:3])}' 등이 의심됩니다.",
+        }
+
+    response["analysis"] = {
+        "detected_symptoms": analysis["matched_symptoms"],
+        "primary_department": primary_department,
+        "all_recommended_departments": recommended_departments,
+        "confidence": analysis["confidence"],
+        "summary": analysis["analysis_summary"],
+    }
+
+    response["search_criteria"] = {
+        "department": primary_department,
+        "region": region or "전국",
+    }
+
+    response["hospitals"] = hospitals
+    response["total_count"] = len(hospitals)
+
+    response["recommendations"] = {
+        "description": symptom_analyzer.get_department_description(primary_department),
+        "keywords_to_look_for": analysis["related_keywords"],
+        "tip": "병원 선택 시 '{}' 관련 키워드가 있는 병원을 추천드립니다. 카카오맵 URL에서 리뷰와 상세정보를 확인하세요.".format(
+            "', '".join(analysis["related_keywords"][:3]) if analysis["related_keywords"] else symptoms
+        ),
+    }
+
+    return response
 
 
 @mcp.tool

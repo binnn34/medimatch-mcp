@@ -1,5 +1,6 @@
 """증상 분석 및 진료과목 추천 모듈"""
-from typing import List, Dict, Tuple
+import re
+from typing import List, Dict, Tuple, Set
 from .config import SYMPTOM_TO_DEPARTMENT, DEPARTMENT_CODES, DISEASE_KEYWORDS
 
 
@@ -9,6 +10,31 @@ class SymptomAnalyzer:
     def __init__(self):
         self.symptom_mapping = SYMPTOM_TO_DEPARTMENT
         self.disease_keywords = DISEASE_KEYWORDS
+        # 불용어 (매칭에서 제외할 단어들)
+        self.stopwords = {'이', '가', '을', '를', '은', '는', '에', '의', '로', '으로', '와', '과', '도', '만', '좀', '너무', '많이', '조금', '약간', '계속', '자꾸', '요즘', '오늘', '어제', '최근'}
+
+    def _normalize_text(self, text: str) -> str:
+        """텍스트 정규화: 공백 제거, 소문자화, 특수문자 제거"""
+        # 공백 제거
+        text = text.replace(" ", "")
+        # 소문자화
+        text = text.lower()
+        # 물음표, 마침표 등 제거
+        text = re.sub(r'[?.!,~\-]', '', text)
+        return text
+
+    def _extract_symptom_keywords(self, text: str) -> Set[str]:
+        """텍스트에서 의미있는 증상 키워드 추출"""
+        # 정규화
+        normalized = self._normalize_text(text)
+
+        # 다양한 길이의 부분 문자열 생성 (2~10자)
+        substrings = set()
+        for length in range(2, min(len(normalized) + 1, 11)):
+            for i in range(len(normalized) - length + 1):
+                substrings.add(normalized[i:i+length])
+
+        return substrings
 
     def analyze_symptoms(self, user_input: str) -> Dict:
         """
@@ -21,22 +47,55 @@ class SymptomAnalyzer:
             분석 결과 딕셔너리
         """
         # 입력 정규화
-        normalized_input = user_input.lower().replace(" ", "")
+        normalized_input = self._normalize_text(user_input)
+
+        # 부분 문자열 추출 (퍼지 매칭용)
+        input_substrings = self._extract_symptom_keywords(user_input)
 
         # 매칭된 증상들
         matched_symptoms = []
+        matched_symptom_keys = set()  # 중복 방지용
         # 추천 진료과목 (점수 기반)
         department_scores: Dict[str, float] = {}
 
-        # 증상 매칭
+        # 증상 매칭 - 3가지 방식 시도
         for symptom, departments in self.symptom_mapping.items():
-            symptom_normalized = symptom.lower().replace(" ", "")
-            if symptom_normalized in normalized_input:
-                matched_symptoms.append(symptom)
-                for i, dept in enumerate(departments):
-                    # 첫 번째 진료과목에 더 높은 점수 부여
-                    score = 1.0 / (i + 1)
-                    department_scores[dept] = department_scores.get(dept, 0) + score
+            symptom_normalized = self._normalize_text(symptom)
+
+            # 1. 정확한 포함 매칭 (기존 방식)
+            exact_match = symptom_normalized in normalized_input
+
+            # 2. 역방향 매칭 (사용자 입력의 일부가 증상 키워드에 포함)
+            reverse_match = any(
+                sub in symptom_normalized
+                for sub in input_substrings
+                if len(sub) >= 3  # 최소 3글자 이상
+            )
+
+            # 3. 증상 키워드가 입력에 포함 (정규화된 상태)
+            keyword_match = symptom_normalized in input_substrings
+
+            if exact_match or reverse_match or keyword_match:
+                # 중복 방지: 같은 진료과를 가리키는 유사 증상은 하나만
+                symptom_key = tuple(sorted(departments))
+                if symptom_key not in matched_symptom_keys or exact_match:
+                    if exact_match:  # 정확한 매칭이면 기존 것 대체
+                        matched_symptom_keys.add(symptom_key)
+
+                    # 매칭 점수 계산 (정확도에 따라)
+                    if exact_match:
+                        match_score = 1.0
+                    elif keyword_match:
+                        match_score = 0.9
+                    else:
+                        match_score = 0.7
+
+                    matched_symptoms.append(symptom)
+                    for i, dept in enumerate(departments):
+                        # 첫 번째 진료과목에 더 높은 점수 부여
+                        base_score = 1.0 / (i + 1)
+                        score = base_score * match_score
+                        department_scores[dept] = department_scores.get(dept, 0) + score
 
         # 점수 기준 정렬
         sorted_departments = sorted(

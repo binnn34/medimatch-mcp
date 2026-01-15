@@ -539,8 +539,9 @@ DISEASE_KEYWORDS = {
 
 # 증상 조합 → 의심 질병 매핑 (진단 우선 제공용)
 # 여러 증상이 함께 나타날 때 의심되는 질병들
+# 다양한 구어체 표현을 모두 포함
 SYMPTOM_TO_DISEASE = {
-    # 어지러움 + 귀 관련 증상
+    # ========== 어지러움 + 귀 관련 증상 ==========
     ("어지럽", "귀에서소리"): {
         "diseases": ["메니에르병", "이석증", "전정신경염"],
         "description": "어지러움과 이명(귀울림)이 함께 나타나는 경우",
@@ -571,8 +572,38 @@ SYMPTOM_TO_DISEASE = {
         "severity": "중등도",
         "departments": ["이비인후과", "신경과"],
     },
+    ("빙글빙글", "귀"): {
+        "diseases": ["이석증", "메니에르병", "전정신경염"],
+        "description": "빙빙 도는 어지러움과 귀 증상",
+        "severity": "중등도",
+        "departments": ["이비인후과", "신경과"],
+    },
+    ("핑", "귀먹먹"): {
+        "diseases": ["이석증", "메니에르병", "돌발성 난청"],
+        "description": "어지러움과 귀가 먹먹한 증상",
+        "severity": "중등도",
+        "departments": ["이비인후과", "신경과"],
+    },
+    ("어지럽", "삐소리"): {
+        "diseases": ["이명", "메니에르병", "소음성 난청"],
+        "description": "어지러움과 귀에서 삐 소리가 나는 증상",
+        "severity": "중등도",
+        "departments": ["이비인후과"],
+    },
+    ("어지럽", "윙윙"): {
+        "diseases": ["이명", "메니에르병", "전정신경염"],
+        "description": "어지러움과 귀에서 윙윙 소리가 나는 증상",
+        "severity": "중등도",
+        "departments": ["이비인후과", "신경과"],
+    },
+    ("어지럽", "귀안들려"): {
+        "diseases": ["돌발성 난청", "메니에르병", "청신경종양"],
+        "description": "어지러움과 청력 저하가 함께 나타나는 경우",
+        "severity": "중등도~중증",
+        "departments": ["이비인후과", "신경과"],
+    },
 
-    # 두통 관련
+    # ========== 두통 관련 ==========
     ("머리아프", "메스꺼"): {
         "diseases": ["편두통", "긴장성 두통", "뇌압 상승"],
         "description": "두통과 구역감이 함께 나타나는 경우",
@@ -591,8 +622,50 @@ SYMPTOM_TO_DISEASE = {
         "severity": "중등도",
         "departments": ["신경과", "안과"],
     },
+    ("머리깨질것같", "토할것같"): {
+        "diseases": ["편두통", "뇌압 상승", "뇌출혈"],
+        "description": "심한 두통과 구토감이 함께 나타나는 경우 - 응급 상황 가능",
+        "severity": "중증",
+        "departments": ["신경과", "응급의학과"],
+    },
+    ("머리욱신", "눈앞깜깜"): {
+        "diseases": ["편두통", "기립성 저혈압", "빈혈"],
+        "description": "욱신거리는 두통과 시야 이상",
+        "severity": "중등도",
+        "departments": ["신경과"],
+    },
+    ("머리띵"): {
+        "diseases": ["긴장성 두통", "고혈압", "경추성 두통"],
+        "description": "머리가 띵한 증상",
+        "severity": "경도~중등도",
+        "departments": ["신경과", "내과"],
+    },
+    ("머리무거", "목뻣뻣"): {
+        "diseases": ["긴장성 두통", "경추성 두통", "근막통증증후군"],
+        "description": "머리 무거움과 목 뻣뻣함이 함께 나타나는 경우",
+        "severity": "경도~중등도",
+        "departments": ["신경과", "정형외과"],
+    },
+    ("머리지끈", "눈침침"): {
+        "diseases": ["편두통", "눈 피로", "노안"],
+        "description": "지끈거리는 두통과 눈이 침침한 증상",
+        "severity": "경도~중등도",
+        "departments": ["신경과", "안과"],
+    },
+    ("뒷골땡", "어깨뻐근"): {
+        "diseases": ["긴장성 두통", "경추성 두통", "근막통증증후군"],
+        "description": "뒷골이 당기고 어깨가 뻐근한 증상",
+        "severity": "경도~중등도",
+        "departments": ["신경과", "정형외과"],
+    },
+    ("관자놀이욱신", "눈아프"): {
+        "diseases": ["편두통", "측두동맥염", "녹내장"],
+        "description": "관자놀이 통증과 눈 통증",
+        "severity": "중등도",
+        "departments": ["신경과", "안과"],
+    },
 
-    # 호흡기 관련
+    # ========== 호흡기 관련 ==========
     ("기침", "가래"): {
         "diseases": ["급성 기관지염", "만성 기관지염", "폐렴"],
         "description": "기침과 가래가 지속되는 경우",
@@ -617,8 +690,56 @@ SYMPTOM_TO_DISEASE = {
         "severity": "경도~중등도",
         "departments": ["이비인후과"],
     },
+    ("목간질", "기침"): {
+        "diseases": ["인후염", "감기", "알레르기"],
+        "description": "목이 간질거리고 기침이 나는 경우",
+        "severity": "경도",
+        "departments": ["이비인후과", "내과"],
+    },
+    ("목칼칼", "가래"): {
+        "diseases": ["인후염", "후두염", "역류성 인후두염"],
+        "description": "목이 칼칼하고 가래가 끼는 경우",
+        "severity": "경도",
+        "departments": ["이비인후과"],
+    },
+    ("숨막힐것같", "가슴답답"): {
+        "diseases": ["천식", "공황장애", "협심증"],
+        "description": "숨이 막히고 가슴이 답답한 경우 - 응급 가능",
+        "severity": "중등도~중증",
+        "departments": ["내과", "응급의학과", "정신건강의학과"],
+    },
+    ("코훌쩍", "눈가려"): {
+        "diseases": ["알레르기성 비염", "알레르기성 결막염"],
+        "description": "코와 눈 알레르기 증상",
+        "severity": "경도",
+        "departments": ["이비인후과", "안과"],
+    },
+    ("코피", "코막힘"): {
+        "diseases": ["비중격만곡증", "비염", "코점막 건조"],
+        "description": "코피와 코막힘이 반복되는 경우",
+        "severity": "경도~중등도",
+        "departments": ["이비인후과"],
+    },
+    ("목쉬", "목아프"): {
+        "diseases": ["후두염", "성대결절", "인후염"],
+        "description": "목이 쉬고 아픈 경우",
+        "severity": "경도",
+        "departments": ["이비인후과"],
+    },
+    ("쌕쌕", "숨차"): {
+        "diseases": ["천식", "기관지염", "COPD"],
+        "description": "쌕쌕 소리가 나고 숨이 찬 경우",
+        "severity": "중등도",
+        "departments": ["내과", "알레르기내과"],
+    },
+    ("가래안나와", "기침"): {
+        "diseases": ["마른 기침", "역류성 식도염", "ACE억제제 부작용"],
+        "description": "가래 없이 마른 기침이 계속되는 경우",
+        "severity": "경도~중등도",
+        "departments": ["내과", "이비인후과"],
+    },
 
-    # 소화기 관련
+    # ========== 소화기 관련 ==========
     ("배아프", "설사"): {
         "diseases": ["급성 장염", "식중독", "과민성 장증후군"],
         "description": "복통과 설사가 함께 나타나는 경우",
@@ -637,8 +758,74 @@ SYMPTOM_TO_DISEASE = {
         "severity": "중등도",
         "departments": ["내과"],
     },
+    ("배꾸르륵", "설사"): {
+        "diseases": ["과민성 장증후군", "장염", "유당불내증"],
+        "description": "배에서 소리가 나고 설사하는 경우",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    ("배꾸륵", "가스"): {
+        "diseases": ["과민성 장증후군", "소화불량", "장내 가스"],
+        "description": "배에서 꾸르륵 소리가 나고 가스가 차는 경우",
+        "severity": "경도",
+        "departments": ["내과"],
+    },
+    ("배부글부글", "트림"): {
+        "diseases": ["위염", "소화불량", "역류성 식도염"],
+        "description": "배가 부글거리고 트림이 나는 경우",
+        "severity": "경도",
+        "departments": ["내과"],
+    },
+    ("속미식", "구역질"): {
+        "diseases": ["위염", "임신 초기", "역류성 식도염"],
+        "description": "속이 미식거리고 구역질이 나는 경우",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    ("명치아프", "속쓰림"): {
+        "diseases": ["위염", "위궤양", "역류성 식도염"],
+        "description": "명치 통증과 속쓰림이 함께 나타나는 경우",
+        "severity": "중등도",
+        "departments": ["내과"],
+    },
+    ("밥먹으면토할것같", "속울렁"): {
+        "diseases": ["위염", "담석증", "위식도역류"],
+        "description": "식후 구역감과 속 울렁거림",
+        "severity": "중등도",
+        "departments": ["내과"],
+    },
+    ("변비", "배빵빵"): {
+        "diseases": ["변비", "장폐색", "과민성 장증후군"],
+        "description": "변비와 복부 팽만감",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    ("변에피", "항문아프"): {
+        "diseases": ["치질", "치열", "대장암"],
+        "description": "혈변과 항문 통증이 함께 나타나는 경우",
+        "severity": "중등도~중증",
+        "departments": ["외과", "대장항문외과"],
+    },
+    ("오른쪽배아프", "토할것같"): {
+        "diseases": ["맹장염(충수염)", "담석증", "요로결석"],
+        "description": "오른쪽 복통과 구토감 - 맹장염 가능성",
+        "severity": "중등도~중증",
+        "departments": ["외과", "응급의학과"],
+    },
+    ("왼쪽배아프", "설사"): {
+        "diseases": ["대장염", "게실염", "과민성 장증후군"],
+        "description": "왼쪽 복통과 설사",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    ("밤새속쓰림", "신물"): {
+        "diseases": ["역류성 식도염", "위궤양"],
+        "description": "야간 속쓰림과 신물이 올라오는 증상",
+        "severity": "중등도",
+        "departments": ["내과"],
+    },
 
-    # 근골격계 관련
+    # ========== 근골격계 관련 ==========
     ("허리아프", "다리저림"): {
         "diseases": ["허리디스크(추간판탈출증)", "척추관협착증", "좌골신경통"],
         "description": "허리 통증과 다리 저림이 함께 나타나면 디스크 의심",
@@ -657,8 +844,110 @@ SYMPTOM_TO_DISEASE = {
         "severity": "중등도",
         "departments": ["정형외과"],
     },
+    ("어깨안돌아가", "어깨아프"): {
+        "diseases": ["오십견(유착성 관절낭염)", "회전근개 손상", "석회성 건염"],
+        "description": "어깨가 굳고 통증이 있는 경우",
+        "severity": "중등도",
+        "departments": ["정형외과"],
+    },
+    ("어깨뻐근", "목결림"): {
+        "diseases": ["근막통증증후군", "거북목증후군", "경추성 두통"],
+        "description": "어깨와 목이 뻣뻣하고 결리는 경우",
+        "severity": "경도~중등도",
+        "departments": ["정형외과", "재활의학과"],
+    },
+    ("손목뻐근", "손저림"): {
+        "diseases": ["손목터널증후군", "건초염", "경추 디스크"],
+        "description": "손목 통증과 손 저림",
+        "severity": "경도~중등도",
+        "departments": ["정형외과", "신경외과"],
+    },
+    ("발목삐끗", "부어"): {
+        "diseases": ["발목 염좌", "인대 손상", "골절"],
+        "description": "발목을 삐끗하고 부은 경우",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    ("무릎시큰", "계단아프"): {
+        "diseases": ["퇴행성 관절염", "연골연화증", "반월상 연골 손상"],
+        "description": "무릎이 시큰거리고 계단 오르내릴 때 아픈 경우",
+        "severity": "중등도",
+        "departments": ["정형외과"],
+    },
+    ("허리뻣뻣", "아침에심함"): {
+        "diseases": ["강직성 척추염", "척추관절염", "근막통증"],
+        "description": "아침에 허리가 뻣뻣하고 움직이면 나아지는 경우",
+        "severity": "중등도",
+        "departments": ["정형외과", "류마티스내과"],
+    },
+    ("손가락뻣뻣", "아침에굳"): {
+        "diseases": ["류마티스 관절염", "퇴행성 관절염"],
+        "description": "아침에 손가락이 뻣뻣하고 굳는 경우",
+        "severity": "중등도",
+        "departments": ["류마티스내과", "정형외과"],
+    },
+    ("엉덩이아프", "다리저림"): {
+        "diseases": ["좌골신경통", "이상근증후군", "허리디스크"],
+        "description": "엉덩이 통증과 다리 저림",
+        "severity": "중등도",
+        "departments": ["정형외과", "신경외과"],
+    },
+    ("팔꿈치아프", "손에힘"): {
+        "diseases": ["테니스엘보(외측상과염)", "골프엘보(내측상과염)"],
+        "description": "팔꿈치 통증과 악력 저하",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    ("종아리땡", "쥐나"): {
+        "diseases": ["근육 경련", "하지정맥류", "전해질 불균형"],
+        "description": "종아리에 쥐가 자주 나는 경우",
+        "severity": "경도",
+        "departments": ["정형외과", "내과"],
+    },
+    ("손목꺾을때아프", "힘빠짐"): {
+        "diseases": ["손목터널증후군", "건초염", "삼각섬유연골 손상"],
+        "description": "손목 움직일 때 통증과 힘이 빠지는 느낌",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    ("어깨들어올리면아프", "밤에심함"): {
+        "diseases": ["회전근개 손상", "오십견", "충돌증후군"],
+        "description": "어깨 올릴 때와 밤에 통증이 심한 경우",
+        "severity": "중등도",
+        "departments": ["정형외과"],
+    },
+    ("고관절아프", "걸을때절뚝"): {
+        "diseases": ["고관절 관절염", "대퇴골두 무혈성 괴사", "고관절 충돌증후군"],
+        "description": "고관절 통증과 보행 장애",
+        "severity": "중등도~중증",
+        "departments": ["정형외과"],
+    },
+    ("등뻐근", "숨쉴때아프"): {
+        "diseases": ["근막통증증후군", "늑간신경통", "흉추 디스크"],
+        "description": "등이 뻐근하고 숨 쉴 때 아픈 경우",
+        "severity": "경도~중등도",
+        "departments": ["정형외과", "내과"],
+    },
+    ("발바닥아프", "아침에심함"): {
+        "diseases": ["족저근막염", "발뒤꿈치 통증"],
+        "description": "아침에 발바닥이 아프고 걸으면 나아지는 경우",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    ("목뒤땡", "두통"): {
+        "diseases": ["긴장성 두통", "경추성 두통", "근막통증증후군"],
+        "description": "목 뒤가 당기면서 두통이 있는 경우",
+        "severity": "경도~중등도",
+        "departments": ["신경과", "정형외과"],
+    },
+    ("손떨림", "글씨안써짐"): {
+        "diseases": ["본태성 떨림", "파킨슨병", "갑상선 기능항진증"],
+        "description": "손 떨림과 미세한 동작 어려움",
+        "severity": "중등도",
+        "departments": ["신경과"],
+    },
 
-    # 피부 관련
+    # ========== 피부 관련 ==========
     ("가려움", "발진"): {
         "diseases": ["아토피 피부염", "접촉성 피부염", "두드러기"],
         "description": "가려움과 발진이 함께 나타나는 경우",
@@ -671,8 +960,80 @@ SYMPTOM_TO_DISEASE = {
         "severity": "경도~중등도",
         "departments": ["피부과"],
     },
+    ("피부각질", "가려움"): {
+        "diseases": ["건선", "아토피 피부염", "지루성 피부염"],
+        "description": "각질과 가려움이 함께 나타나는 경우",
+        "severity": "경도~중등도",
+        "departments": ["피부과"],
+    },
+    ("뾰루지", "얼굴붉"): {
+        "diseases": ["여드름", "주사(로사세아)", "모낭염"],
+        "description": "뾰루지와 얼굴 홍조",
+        "severity": "경도",
+        "departments": ["피부과"],
+    },
+    ("두피가려", "비듬"): {
+        "diseases": ["지루성 피부염", "두피 건선", "비듬"],
+        "description": "두피 가려움과 비듬",
+        "severity": "경도",
+        "departments": ["피부과"],
+    },
+    ("피부트러블", "뾰루지"): {
+        "diseases": ["여드름", "모낭염", "접촉성 피부염"],
+        "description": "피부 트러블과 뾰루지",
+        "severity": "경도",
+        "departments": ["피부과"],
+    },
+    ("물집", "가려움"): {
+        "diseases": ["수포성 피부염", "접촉성 피부염", "대상포진"],
+        "description": "물집과 가려움이 함께 나타나는 경우",
+        "severity": "경도~중등도",
+        "departments": ["피부과"],
+    },
+    ("피부갈라짐", "따가움"): {
+        "diseases": ["습진", "건조증", "아토피"],
+        "description": "피부가 갈라지고 따가운 경우",
+        "severity": "경도~중등도",
+        "departments": ["피부과"],
+    },
+    ("손습진", "갈라짐"): {
+        "diseases": ["손습진", "접촉성 피부염", "주부습진"],
+        "description": "손에 습진이 생기고 갈라지는 경우",
+        "severity": "경도~중등도",
+        "departments": ["피부과"],
+    },
+    ("발톱색변", "두꺼워짐"): {
+        "diseases": ["무좀(발톱무좀)", "건선"],
+        "description": "발톱 색이 변하고 두꺼워지는 경우",
+        "severity": "경도~중등도",
+        "departments": ["피부과"],
+    },
+    ("발가려", "발각질"): {
+        "diseases": ["무좀(족부백선)", "발 건조증"],
+        "description": "발이 가렵고 각질이 생기는 경우",
+        "severity": "경도",
+        "departments": ["피부과"],
+    },
+    ("띠모양발진", "찌릿"): {
+        "diseases": ["대상포진"],
+        "description": "띠 모양 발진과 찌릿한 통증 - 대상포진 의심",
+        "severity": "중등도",
+        "departments": ["피부과", "신경과"],
+    },
+    ("점커짐", "색변화"): {
+        "diseases": ["점(모반)", "흑색종(악성)"],
+        "description": "점이 커지고 색이 변하는 경우 - 검사 필요",
+        "severity": "경도~중증",
+        "departments": ["피부과"],
+    },
+    ("탈모", "두피가려"): {
+        "diseases": ["지루성 탈모", "원형 탈모", "두피염"],
+        "description": "탈모와 두피 가려움",
+        "severity": "경도~중등도",
+        "departments": ["피부과"],
+    },
 
-    # 심혈관 관련
+    # ========== 심혈관 관련 ==========
     ("가슴통증", "숨이차"): {
         "diseases": ["협심증", "심근경색", "폐색전증"],
         "description": "가슴 통증과 호흡곤란이 함께 나타나면 심장질환 의심 - 응급 상황일 수 있음",
@@ -685,16 +1046,70 @@ SYMPTOM_TO_DISEASE = {
         "severity": "중등도",
         "departments": ["내과", "정신건강의학과"],
     },
+    ("가슴답답", "왼팔저림"): {
+        "diseases": ["협심증", "심근경색"],
+        "description": "가슴 답답함과 왼팔 저림 - 심장 응급 가능",
+        "severity": "중증",
+        "departments": ["내과", "응급의학과"],
+    },
+    ("심장쿵쿵", "불안"): {
+        "diseases": ["부정맥", "공황장애", "빈맥"],
+        "description": "심장이 쿵쿵 뛰고 불안한 경우",
+        "severity": "중등도",
+        "departments": ["내과", "정신건강의학과"],
+    },
+    ("맥박불규칙", "어지럽"): {
+        "diseases": ["심방세동", "부정맥"],
+        "description": "맥박이 불규칙하고 어지러운 경우",
+        "severity": "중등도~중증",
+        "departments": ["내과"],
+    },
+    ("다리부종", "숨차"): {
+        "diseases": ["심부전", "하지정맥류", "신장질환"],
+        "description": "다리 부종과 숨참 - 심부전 가능성",
+        "severity": "중등도~중증",
+        "departments": ["내과"],
+    },
+    ("가슴쥐어짜는듯", "식은땀"): {
+        "diseases": ["심근경색", "협심증"],
+        "description": "가슴을 쥐어짜는 듯한 통증과 식은땀 - 응급",
+        "severity": "중증",
+        "departments": ["응급의학과", "내과"],
+    },
 
-    # 비뇨기 관련
+    # ========== 비뇨기 관련 ==========
     ("소변자주", "소변볼때아프"): {
         "diseases": ["방광염", "요로감염"],
         "description": "빈뇨와 배뇨통이 함께 나타나면 요로감염 의심",
         "severity": "경도~중등도",
         "departments": ["비뇨의학과"],
     },
+    ("소변피", "옆구리아프"): {
+        "diseases": ["요로결석", "신장암", "방광암"],
+        "description": "혈뇨와 옆구리 통증 - 결석이나 종양 가능",
+        "severity": "중등도~중증",
+        "departments": ["비뇨의학과"],
+    },
+    ("소변찔끔", "기침할때"): {
+        "diseases": ["복압성 요실금", "과민성 방광"],
+        "description": "기침이나 재채기 시 소변이 새는 경우",
+        "severity": "경도~중등도",
+        "departments": ["비뇨의학과", "산부인과"],
+    },
+    ("소변시원찮", "잔뇨감"): {
+        "diseases": ["전립선비대증", "방광염", "요도협착"],
+        "description": "소변이 시원하게 안 나오고 잔뇨감 있는 경우",
+        "severity": "경도~중등도",
+        "departments": ["비뇨의학과"],
+    },
+    ("밤에소변자주", "소변줄기약"): {
+        "diseases": ["전립선비대증", "과민성 방광"],
+        "description": "야간뇨와 소변 줄기가 약한 경우",
+        "severity": "경도~중등도",
+        "departments": ["비뇨의학과"],
+    },
 
-    # 정신건강 관련
+    # ========== 정신건강 관련 ==========
     ("불안", "잠이안와"): {
         "diseases": ["불안장애", "수면장애", "우울증"],
         "description": "불안감과 수면 장애가 함께 나타나는 경우",
@@ -707,8 +1122,50 @@ SYMPTOM_TO_DISEASE = {
         "severity": "중등도",
         "departments": ["정신건강의학과"],
     },
+    ("짜증", "집중안됨"): {
+        "diseases": ["우울증", "불안장애", "ADHD"],
+        "description": "짜증과 집중력 저하",
+        "severity": "경도~중등도",
+        "departments": ["정신건강의학과"],
+    },
+    ("가슴두근", "죽을것같"): {
+        "diseases": ["공황장애", "불안장애"],
+        "description": "심장 두근거림과 극심한 공포감 - 공황발작 의심",
+        "severity": "중등도",
+        "departments": ["정신건강의학과", "응급의학과"],
+    },
+    ("손씻기반복", "확인반복"): {
+        "diseases": ["강박장애(OCD)"],
+        "description": "반복적인 행동과 확인 강박",
+        "severity": "중등도",
+        "departments": ["정신건강의학과"],
+    },
+    ("기억력저하", "집중안됨"): {
+        "diseases": ["우울증", "불안장애", "치매 초기"],
+        "description": "기억력과 집중력 저하",
+        "severity": "경도~중등도",
+        "departments": ["정신건강의학과", "신경과"],
+    },
+    ("불면", "악몽"): {
+        "diseases": ["외상후스트레스장애(PTSD)", "수면장애"],
+        "description": "불면과 악몽이 반복되는 경우",
+        "severity": "중등도",
+        "departments": ["정신건강의학과"],
+    },
+    ("식욕없음", "체중감소"): {
+        "diseases": ["우울증", "섭식장애", "갑상선 질환"],
+        "description": "식욕 저하와 체중 감소",
+        "severity": "중등도",
+        "departments": ["정신건강의학과", "내과"],
+    },
+    ("폭식", "토해내기"): {
+        "diseases": ["폭식증(신경성 폭식증)"],
+        "description": "폭식과 구토 반복",
+        "severity": "중등도~중증",
+        "departments": ["정신건강의학과"],
+    },
 
-    # 눈 관련
+    # ========== 눈 관련 ==========
     ("눈이빨", "눈물이나"): {
         "diseases": ["결막염", "안구건조증", "알레르기성 결막염"],
         "description": "눈 충혈과 눈물이 함께 나타나는 경우",
@@ -721,11 +1178,190 @@ SYMPTOM_TO_DISEASE = {
         "severity": "경도",
         "departments": ["안과"],
     },
+    ("눈침침", "가까이안보여"): {
+        "diseases": ["노안", "원시"],
+        "description": "눈이 침침하고 가까이 안 보이는 경우",
+        "severity": "경도",
+        "departments": ["안과"],
+    },
+    ("눈앞번쩍", "검은점"): {
+        "diseases": ["비문증(날파리증)", "망막박리", "후유리체 박리"],
+        "description": "눈앞에 번쩍이고 검은 점이 보이는 경우",
+        "severity": "경도~중증",
+        "departments": ["안과"],
+    },
+    ("눈부심", "두통"): {
+        "diseases": ["편두통", "녹내장", "각막염"],
+        "description": "눈부심과 두통이 함께 나타나는 경우",
+        "severity": "경도~중등도",
+        "departments": ["안과", "신경과"],
+    },
+    ("눈떨림", "피곤"): {
+        "diseases": ["눈 피로", "마그네슘 부족", "스트레스"],
+        "description": "눈꺼풀 떨림과 피로감",
+        "severity": "경도",
+        "departments": ["안과"],
+    },
+    ("눈꺼풀부음", "가려움"): {
+        "diseases": ["알레르기성 결막염", "다래끼", "눈꺼풀염"],
+        "description": "눈꺼풀이 붓고 가려운 경우",
+        "severity": "경도",
+        "departments": ["안과"],
+    },
+    ("눈충혈", "눈곱"): {
+        "diseases": ["세균성 결막염", "바이러스성 결막염"],
+        "description": "눈이 충혈되고 눈곱이 끼는 경우",
+        "severity": "경도~중등도",
+        "departments": ["안과"],
+    },
+    ("시야좁아짐", "눈아프"): {
+        "diseases": ["녹내장", "시신경 질환"],
+        "description": "시야가 좁아지고 눈이 아픈 경우",
+        "severity": "중등도~중증",
+        "departments": ["안과"],
+    },
+
+    # ========== 귀 관련 ==========
+    ("귀먹먹", "청력저하"): {
+        "diseases": ["돌발성 난청", "이관기능장애", "중이염"],
+        "description": "귀가 먹먹하고 청력이 떨어지는 경우",
+        "severity": "중등도",
+        "departments": ["이비인후과"],
+    },
+    ("귀아프", "열"): {
+        "diseases": ["급성 중이염", "외이도염"],
+        "description": "귀 통증과 발열",
+        "severity": "경도~중등도",
+        "departments": ["이비인후과"],
+    },
+    ("귀에서진물", "가려움"): {
+        "diseases": ["외이도염", "중이염", "습진"],
+        "description": "귀에서 진물이 나고 가려운 경우",
+        "severity": "경도~중등도",
+        "departments": ["이비인후과"],
+    },
+
+    # ========== 내분비/대사 관련 ==========
+    ("목마름", "소변많이"): {
+        "diseases": ["당뇨병", "요붕증"],
+        "description": "갈증과 다뇨 - 당뇨병 의심",
+        "severity": "중등도",
+        "departments": ["내과"],
+    },
+    ("살빠짐", "더위많이탐"): {
+        "diseases": ["갑상선 기능항진증"],
+        "description": "체중 감소와 더위를 많이 타는 증상",
+        "severity": "중등도",
+        "departments": ["내과"],
+    },
+    ("피곤", "추위많이탐"): {
+        "diseases": ["갑상선 기능저하증", "빈혈"],
+        "description": "피로감과 추위를 많이 타는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    ("손떨림", "심장빨리뜀"): {
+        "diseases": ["갑상선 기능항진증"],
+        "description": "손 떨림과 빈맥",
+        "severity": "중등도",
+        "departments": ["내과"],
+    },
+    ("체중증가", "붓기"): {
+        "diseases": ["갑상선 기능저하증", "쿠싱증후군", "신장질환"],
+        "description": "체중 증가와 부종",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+
+    # ========== 여성 질환 ==========
+    ("생리통심함", "덩어리"): {
+        "diseases": ["자궁내막증", "자궁근종", "선근증"],
+        "description": "심한 생리통과 혈덩어리",
+        "severity": "중등도",
+        "departments": ["산부인과"],
+    },
+    ("생리불규칙", "털많아짐"): {
+        "diseases": ["다낭성 난소 증후군(PCOS)"],
+        "description": "생리 불순과 다모증",
+        "severity": "경도~중등도",
+        "departments": ["산부인과"],
+    },
+    ("질분비물", "가려움"): {
+        "diseases": ["질염", "칸디다증"],
+        "description": "질 분비물 이상과 가려움",
+        "severity": "경도~중등도",
+        "departments": ["산부인과"],
+    },
+    ("아랫배묵직", "생리양많음"): {
+        "diseases": ["자궁근종", "자궁내막증"],
+        "description": "아랫배 무거움과 생리량 과다",
+        "severity": "중등도",
+        "departments": ["산부인과"],
+    },
+    ("유방멍울", "통증"): {
+        "diseases": ["유방낭종", "섬유선종", "유방암"],
+        "description": "유방 멍울과 통증 - 검사 필요",
+        "severity": "경도~중증",
+        "departments": ["외과", "유방외과"],
+    },
+
+    # ========== 소아 관련 ==========
+    ("아이열", "보채"): {
+        "diseases": ["감기", "중이염", "요로감염"],
+        "description": "소아 발열과 보챔",
+        "severity": "경도~중등도",
+        "departments": ["소아청소년과"],
+    },
+    ("아이발진", "열"): {
+        "diseases": ["수두", "홍역", "돌발진", "수족구병"],
+        "description": "소아 발진과 발열",
+        "severity": "경도~중등도",
+        "departments": ["소아청소년과"],
+    },
+    ("아이기침", "쌕쌕"): {
+        "diseases": ["천식", "크루프", "기관지염"],
+        "description": "소아 기침과 쌕쌕거리는 소리",
+        "severity": "중등도",
+        "departments": ["소아청소년과"],
+    },
+    ("아이구토", "설사"): {
+        "diseases": ["장염", "식중독", "로타바이러스"],
+        "description": "소아 구토와 설사",
+        "severity": "경도~중등도",
+        "departments": ["소아청소년과"],
+    },
+
+    # ========== 감염/전신 증상 ==========
+    ("오한", "고열"): {
+        "diseases": ["독감", "폐렴", "요로감염", "패혈증"],
+        "description": "오한과 고열 - 심한 감염 가능",
+        "severity": "중등도~중증",
+        "departments": ["내과", "응급의학과"],
+    },
+    ("온몸쑤심", "열"): {
+        "diseases": ["독감", "감기", "코로나19"],
+        "description": "전신 근육통과 발열",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    ("림프절부음", "열"): {
+        "diseases": ["림프절염", "감염성 단핵구증", "림프종"],
+        "description": "림프절 부종과 발열",
+        "severity": "경도~중증",
+        "departments": ["내과"],
+    },
+    ("피로", "입마름"): {
+        "diseases": ["쇼그렌증후군", "당뇨병", "약물 부작용"],
+        "description": "피로감과 구강 건조",
+        "severity": "경도~중등도",
+        "departments": ["내과", "류마티스내과"],
+    },
 }
 
 # 단일 증상 → 의심 질병 매핑
+# 다양한 구어체 표현과 변형 포함
 SINGLE_SYMPTOM_TO_DISEASE = {
-    # 귀 관련
+    # ========== 귀 관련 ==========
     "이명": {
         "diseases": ["이명(귀울림)", "메니에르병", "돌발성 난청", "노인성 난청"],
         "description": "귀에서 소리가 나는 증상",
@@ -744,8 +1380,44 @@ SINGLE_SYMPTOM_TO_DISEASE = {
         "severity": "경도~중등도",
         "departments": ["이비인후과"],
     },
+    "삐소리": {
+        "diseases": ["이명", "소음성 난청"],
+        "description": "귀에서 삐 소리가 나는 증상",
+        "severity": "경도~중등도",
+        "departments": ["이비인후과"],
+    },
+    "윙윙": {
+        "diseases": ["이명", "메니에르병"],
+        "description": "귀에서 윙윙 소리가 나는 증상",
+        "severity": "경도~중등도",
+        "departments": ["이비인후과"],
+    },
+    "귀먹먹": {
+        "diseases": ["이관기능장애", "돌발성 난청", "중이염"],
+        "description": "귀가 먹먹한 증상",
+        "severity": "경도~중등도",
+        "departments": ["이비인후과"],
+    },
+    "귀안들려": {
+        "diseases": ["돌발성 난청", "노인성 난청", "중이염"],
+        "description": "청력이 저하된 증상",
+        "severity": "중등도~중증",
+        "departments": ["이비인후과"],
+    },
+    "귀아파": {
+        "diseases": ["중이염", "외이도염", "고막 손상"],
+        "description": "귀가 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["이비인후과"],
+    },
+    "귀가려": {
+        "diseases": ["외이도염", "귀 습진", "진균 감염"],
+        "description": "귀가 가려운 증상",
+        "severity": "경도",
+        "departments": ["이비인후과"],
+    },
 
-    # 어지러움 관련
+    # ========== 어지러움 관련 ==========
     "어지럽": {
         "diseases": ["이석증(양성 돌발성 체위성 현훈)", "전정신경염", "메니에르병", "빈혈", "저혈압"],
         "description": "어지러움은 다양한 원인이 있을 수 있음",
@@ -764,8 +1436,32 @@ SINGLE_SYMPTOM_TO_DISEASE = {
         "severity": "경도~중등도",
         "departments": ["이비인후과", "신경과"],
     },
+    "빙글빙글": {
+        "diseases": ["이석증", "전정신경염", "메니에르병"],
+        "description": "빙빙 도는 어지러움",
+        "severity": "중등도",
+        "departments": ["이비인후과", "신경과"],
+    },
+    "핑도": {
+        "diseases": ["기립성 저혈압", "빈혈", "저혈당"],
+        "description": "갑자기 핑 도는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과", "신경과"],
+    },
+    "눈앞깜깜": {
+        "diseases": ["기립성 저혈압", "빈혈", "저혈당"],
+        "description": "눈앞이 깜깜해지는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과", "신경과"],
+    },
+    "일어나면어지러": {
+        "diseases": ["기립성 저혈압", "이석증"],
+        "description": "일어날 때 어지러운 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과", "이비인후과"],
+    },
 
-    # 두통 관련
+    # ========== 두통 관련 ==========
     "두통": {
         "diseases": ["긴장성 두통", "편두통", "군발성 두통"],
         "description": "머리가 아픈 증상",
@@ -778,8 +1474,56 @@ SINGLE_SYMPTOM_TO_DISEASE = {
         "severity": "중등도",
         "departments": ["신경과"],
     },
+    "머리아파": {
+        "diseases": ["긴장성 두통", "편두통", "경추성 두통"],
+        "description": "머리가 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["신경과"],
+    },
+    "머리욱신": {
+        "diseases": ["편두통", "혈관성 두통"],
+        "description": "머리가 욱신거리는 증상",
+        "severity": "중등도",
+        "departments": ["신경과"],
+    },
+    "머리지끈": {
+        "diseases": ["편두통", "긴장성 두통"],
+        "description": "머리가 지끈거리는 증상",
+        "severity": "경도~중등도",
+        "departments": ["신경과"],
+    },
+    "머리띵": {
+        "diseases": ["긴장성 두통", "고혈압", "만성피로"],
+        "description": "머리가 띵한 증상",
+        "severity": "경도~중등도",
+        "departments": ["신경과", "내과"],
+    },
+    "머리무거": {
+        "diseases": ["긴장성 두통", "경추성 두통", "축농증"],
+        "description": "머리가 무거운 증상",
+        "severity": "경도~중등도",
+        "departments": ["신경과"],
+    },
+    "머리깨질것같": {
+        "diseases": ["편두통", "군발성 두통", "뇌압 상승"],
+        "description": "머리가 깨질 것 같은 심한 두통",
+        "severity": "중등도~중증",
+        "departments": ["신경과", "응급의학과"],
+    },
+    "뒷골땡": {
+        "diseases": ["긴장성 두통", "경추성 두통", "고혈압"],
+        "description": "뒷골이 당기는 증상",
+        "severity": "경도~중등도",
+        "departments": ["신경과", "내과"],
+    },
+    "관자놀이아파": {
+        "diseases": ["편두통", "측두동맥염"],
+        "description": "관자놀이가 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["신경과"],
+    },
 
-    # 소화기 관련
+    # ========== 소화기 관련 ==========
     "속쓰림": {
         "diseases": ["위염", "역류성 식도염", "위궤양"],
         "description": "속이 쓰리고 타는 듯한 증상",
@@ -792,8 +1536,116 @@ SINGLE_SYMPTOM_TO_DISEASE = {
         "severity": "경도",
         "departments": ["내과"],
     },
+    "속이쓰려": {
+        "diseases": ["위염", "역류성 식도염", "위궤양"],
+        "description": "속이 쓰린 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "더부룩": {
+        "diseases": ["소화불량", "위염", "과민성 장증후군"],
+        "description": "배가 더부룩한 증상",
+        "severity": "경도",
+        "departments": ["내과"],
+    },
+    "배아파": {
+        "diseases": ["장염", "위염", "과민성 장증후군"],
+        "description": "배가 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "복통": {
+        "diseases": ["장염", "과민성 장증후군", "맹장염"],
+        "description": "복부 통증",
+        "severity": "경도~중증",
+        "departments": ["내과", "외과"],
+    },
+    "배꾸르륵": {
+        "diseases": ["과민성 장증후군", "장내 가스", "소화불량"],
+        "description": "배에서 꾸르륵 소리가 나는 증상",
+        "severity": "경도",
+        "departments": ["내과"],
+    },
+    "배꾸륵": {
+        "diseases": ["과민성 장증후군", "장내 가스"],
+        "description": "배에서 소리가 나는 증상",
+        "severity": "경도",
+        "departments": ["내과"],
+    },
+    "가스참": {
+        "diseases": ["복부 팽만", "과민성 장증후군", "소화불량"],
+        "description": "가스가 차는 증상",
+        "severity": "경도",
+        "departments": ["내과"],
+    },
+    "방귀많이": {
+        "diseases": ["장내 가스", "과민성 장증후군", "유당불내증"],
+        "description": "방귀가 자주 나오는 증상",
+        "severity": "경도",
+        "departments": ["내과"],
+    },
+    "트림": {
+        "diseases": ["위식도역류", "소화불량", "식도이완불능증"],
+        "description": "트림이 자주 나오는 증상",
+        "severity": "경도",
+        "departments": ["내과"],
+    },
+    "속미식": {
+        "diseases": ["위염", "임신", "역류성 식도염"],
+        "description": "속이 미식거리는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "구역질": {
+        "diseases": ["위염", "편두통", "임신"],
+        "description": "구역질이 나는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "메스꺼": {
+        "diseases": ["위염", "멀미", "편두통"],
+        "description": "메스꺼운 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "토할것같": {
+        "diseases": ["위염", "장염", "편두통"],
+        "description": "토할 것 같은 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "설사": {
+        "diseases": ["장염", "과민성 장증후군", "식중독"],
+        "description": "설사 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "변비": {
+        "diseases": ["변비", "과민성 장증후군", "갑상선 기능저하"],
+        "description": "변비 증상",
+        "severity": "경도",
+        "departments": ["내과"],
+    },
+    "혈변": {
+        "diseases": ["치질", "대장염", "대장암"],
+        "description": "혈변 증상 - 검사 필요",
+        "severity": "중등도~중증",
+        "departments": ["내과", "외과"],
+    },
+    "명치아파": {
+        "diseases": ["위염", "역류성 식도염", "협심증"],
+        "description": "명치가 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "신물": {
+        "diseases": ["역류성 식도염", "위염"],
+        "description": "신물이 올라오는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
 
-    # 피부 관련
+    # ========== 피부 관련 ==========
     "아토피": {
         "diseases": ["아토피 피부염"],
         "description": "만성적인 피부 염증 질환",
@@ -806,8 +1658,98 @@ SINGLE_SYMPTOM_TO_DISEASE = {
         "severity": "경도~중등도",
         "departments": ["피부과"],
     },
+    "피부가려": {
+        "diseases": ["아토피", "건조증", "접촉성 피부염"],
+        "description": "피부가 가려운 증상",
+        "severity": "경도~중등도",
+        "departments": ["피부과"],
+    },
+    "가려워": {
+        "diseases": ["피부염", "알레르기", "건조증"],
+        "description": "가려운 증상",
+        "severity": "경도",
+        "departments": ["피부과"],
+    },
+    "뾰루지": {
+        "diseases": ["여드름", "모낭염", "피부염"],
+        "description": "뾰루지가 나는 증상",
+        "severity": "경도",
+        "departments": ["피부과"],
+    },
+    "여드름": {
+        "diseases": ["여드름", "모낭염"],
+        "description": "여드름 증상",
+        "severity": "경도",
+        "departments": ["피부과"],
+    },
+    "발진": {
+        "diseases": ["피부염", "알레르기", "바이러스 감염"],
+        "description": "발진이 나타나는 증상",
+        "severity": "경도~중등도",
+        "departments": ["피부과"],
+    },
+    "습진": {
+        "diseases": ["습진", "아토피 피부염"],
+        "description": "습진 증상",
+        "severity": "경도~중등도",
+        "departments": ["피부과"],
+    },
+    "건선": {
+        "diseases": ["건선"],
+        "description": "건선 증상 (각질, 붉은 반점)",
+        "severity": "경도~중등도",
+        "departments": ["피부과"],
+    },
+    "각질": {
+        "diseases": ["건선", "건조증", "지루성 피부염"],
+        "description": "각질이 생기는 증상",
+        "severity": "경도",
+        "departments": ["피부과"],
+    },
+    "피부트러블": {
+        "diseases": ["여드름", "피부염", "알레르기"],
+        "description": "피부 트러블",
+        "severity": "경도",
+        "departments": ["피부과"],
+    },
+    "피부붉": {
+        "diseases": ["주사(로사세아)", "피부염", "알레르기"],
+        "description": "피부가 붉어지는 증상",
+        "severity": "경도~중등도",
+        "departments": ["피부과"],
+    },
+    "무좀": {
+        "diseases": ["족부백선(무좀)"],
+        "description": "무좀 증상",
+        "severity": "경도",
+        "departments": ["피부과"],
+    },
+    "탈모": {
+        "diseases": ["탈모(안드로겐성)", "원형탈모", "스트레스성 탈모"],
+        "description": "탈모 증상",
+        "severity": "경도~중등도",
+        "departments": ["피부과"],
+    },
+    "비듬": {
+        "diseases": ["지루성 피부염", "두피 건선"],
+        "description": "비듬이 생기는 증상",
+        "severity": "경도",
+        "departments": ["피부과"],
+    },
+    "두피가려": {
+        "diseases": ["지루성 피부염", "두피 건선", "비듬"],
+        "description": "두피가 가려운 증상",
+        "severity": "경도",
+        "departments": ["피부과"],
+    },
+    "띠발진": {
+        "diseases": ["대상포진"],
+        "description": "띠 모양 발진 - 대상포진 의심",
+        "severity": "중등도",
+        "departments": ["피부과"],
+    },
 
-    # 근골격계 관련
+    # ========== 근골격계 관련 ==========
     "허리디스크": {
         "diseases": ["추간판 탈출증(허리디스크)"],
         "description": "허리 디스크가 튀어나와 신경을 누르는 질환",
@@ -820,8 +1762,164 @@ SINGLE_SYMPTOM_TO_DISEASE = {
         "severity": "중등도~중증",
         "departments": ["정형외과", "신경외과"],
     },
+    "허리아파": {
+        "diseases": ["요통", "허리디스크", "근육통"],
+        "description": "허리가 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "목아파": {
+        "diseases": ["경추통", "목디스크", "거북목증후군"],
+        "description": "목이 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "어깨아파": {
+        "diseases": ["오십견", "회전근개 손상", "어깨충돌증후군"],
+        "description": "어깨가 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "어깨뻐근": {
+        "diseases": ["근막통증증후군", "거북목증후군", "어깨결림"],
+        "description": "어깨가 뻐근한 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과", "재활의학과"],
+    },
+    "어깨안돌아가": {
+        "diseases": ["오십견(유착성 관절낭염)", "회전근개 손상"],
+        "description": "어깨가 굳어서 안 돌아가는 증상",
+        "severity": "중등도",
+        "departments": ["정형외과"],
+    },
+    "목뻣뻣": {
+        "diseases": ["경추증", "거북목증후군", "근막통증"],
+        "description": "목이 뻣뻣한 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "목결림": {
+        "diseases": ["근막통증증후군", "거북목", "경추증"],
+        "description": "목이 결리는 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "무릎아파": {
+        "diseases": ["퇴행성 관절염", "반월상 연골 손상", "슬개골연화증"],
+        "description": "무릎이 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "무릎시큰": {
+        "diseases": ["퇴행성 관절염", "연골연화증"],
+        "description": "무릎이 시큰거리는 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "손목아파": {
+        "diseases": ["손목터널증후군", "건초염", "관절염"],
+        "description": "손목이 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "손목뻐근": {
+        "diseases": ["손목터널증후군", "건초염", "손목 염좌"],
+        "description": "손목이 뻐근한 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "발목아파": {
+        "diseases": ["발목 염좌", "관절염", "아킬레스건염"],
+        "description": "발목이 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "발목삐끗": {
+        "diseases": ["발목 염좌", "인대 손상"],
+        "description": "발목을 삐끗한 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "다리저림": {
+        "diseases": ["허리디스크", "좌골신경통", "말초신경병증"],
+        "description": "다리가 저린 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과", "신경외과"],
+    },
+    "팔저림": {
+        "diseases": ["목디스크", "손목터널증후군", "말초신경병증"],
+        "description": "팔이 저린 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과", "신경외과"],
+    },
+    "손저림": {
+        "diseases": ["손목터널증후군", "목디스크", "말초신경병증"],
+        "description": "손이 저린 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과", "신경과"],
+    },
+    "발저림": {
+        "diseases": ["허리디스크", "말초신경병증", "당뇨병성 신경병증"],
+        "description": "발이 저린 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과", "신경과"],
+    },
+    "쥐나": {
+        "diseases": ["근육 경련", "전해질 불균형", "하지정맥류"],
+        "description": "쥐가 나는 증상",
+        "severity": "경도",
+        "departments": ["정형외과", "내과"],
+    },
+    "종아리땡": {
+        "diseases": ["근육 경련", "하지정맥류", "근막통증"],
+        "description": "종아리가 당기는 증상",
+        "severity": "경도",
+        "departments": ["정형외과"],
+    },
+    "등뻐근": {
+        "diseases": ["근막통증증후군", "흉추 문제", "자세 이상"],
+        "description": "등이 뻐근한 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "엉덩이아파": {
+        "diseases": ["이상근증후군", "좌골신경통", "고관절 문제"],
+        "description": "엉덩이가 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "발바닥아파": {
+        "diseases": ["족저근막염", "발뒤꿈치 통증"],
+        "description": "발바닥이 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "손가락뻣뻣": {
+        "diseases": ["류마티스 관절염", "퇴행성 관절염", "방아쇠 손가락"],
+        "description": "손가락이 뻣뻣한 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과", "류마티스내과"],
+    },
+    "관절아파": {
+        "diseases": ["관절염", "류마티스", "통풍"],
+        "description": "관절이 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과", "류마티스내과"],
+    },
+    "뼈아파": {
+        "diseases": ["골다공증", "피로골절", "골종양"],
+        "description": "뼈가 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["정형외과"],
+    },
+    "오십견": {
+        "diseases": ["유착성 관절낭염(오십견)"],
+        "description": "어깨가 굳어서 움직이기 어려운 증상",
+        "severity": "중등도",
+        "departments": ["정형외과"],
+    },
 
-    # 호흡기 관련
+    # ========== 호흡기 관련 ==========
     "기침": {
         "diseases": ["급성 기관지염", "감기", "천식", "역류성 식도염"],
         "description": "기침이 나는 증상",
@@ -834,8 +1932,166 @@ SINGLE_SYMPTOM_TO_DISEASE = {
         "severity": "경도",
         "departments": ["이비인후과", "내과"],
     },
+    "코막힘": {
+        "diseases": ["비염", "부비동염", "비중격만곡증"],
+        "description": "코가 막히는 증상",
+        "severity": "경도",
+        "departments": ["이비인후과"],
+    },
+    "재채기": {
+        "diseases": ["알레르기성 비염", "감기"],
+        "description": "재채기가 나는 증상",
+        "severity": "경도",
+        "departments": ["이비인후과"],
+    },
+    "코훌쩍": {
+        "diseases": ["비염", "감기", "알레르기"],
+        "description": "코를 훌쩍이는 증상",
+        "severity": "경도",
+        "departments": ["이비인후과"],
+    },
+    "코피": {
+        "diseases": ["비출혈", "비중격만곡증", "건조증"],
+        "description": "코피가 나는 증상",
+        "severity": "경도~중등도",
+        "departments": ["이비인후과"],
+    },
+    "가래": {
+        "diseases": ["기관지염", "폐렴", "부비동염"],
+        "description": "가래가 나오는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과", "이비인후과"],
+    },
+    "목아프": {
+        "diseases": ["인후염", "편도염", "감기"],
+        "description": "목이 아픈 증상",
+        "severity": "경도",
+        "departments": ["이비인후과"],
+    },
+    "목간질": {
+        "diseases": ["인후염", "알레르기", "역류성 인후두염"],
+        "description": "목이 간질간질한 증상",
+        "severity": "경도",
+        "departments": ["이비인후과"],
+    },
+    "목칼칼": {
+        "diseases": ["인후염", "후두염", "역류성 인후두염"],
+        "description": "목이 칼칼한 증상",
+        "severity": "경도",
+        "departments": ["이비인후과"],
+    },
+    "목쉬": {
+        "diseases": ["후두염", "성대결절", "성대 폴립"],
+        "description": "목이 쉰 증상",
+        "severity": "경도~중등도",
+        "departments": ["이비인후과"],
+    },
+    "숨차": {
+        "diseases": ["천식", "COPD", "심부전"],
+        "description": "숨이 찬 증상",
+        "severity": "경도~중증",
+        "departments": ["내과"],
+    },
+    "숨막힘": {
+        "diseases": ["천식", "공황장애", "폐색전증"],
+        "description": "숨이 막히는 증상",
+        "severity": "중등도~중증",
+        "departments": ["내과", "응급의학과"],
+    },
+    "쌕쌕": {
+        "diseases": ["천식", "기관지염"],
+        "description": "숨 쉴 때 쌕쌕 소리",
+        "severity": "중등도",
+        "departments": ["내과"],
+    },
+    "축농증": {
+        "diseases": ["부비동염(축농증)"],
+        "description": "축농증 증상",
+        "severity": "경도~중등도",
+        "departments": ["이비인후과"],
+    },
 
-    # 정신건강 관련
+    # ========== 눈 관련 ==========
+    "눈아파": {
+        "diseases": ["안구건조증", "결막염", "녹내장"],
+        "description": "눈이 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["안과"],
+    },
+    "눈침침": {
+        "diseases": ["노안", "피로", "백내장 초기"],
+        "description": "눈이 침침한 증상",
+        "severity": "경도",
+        "departments": ["안과"],
+    },
+    "눈뻑뻑": {
+        "diseases": ["안구건조증", "눈 피로"],
+        "description": "눈이 뻑뻑한 증상",
+        "severity": "경도",
+        "departments": ["안과"],
+    },
+    "눈충혈": {
+        "diseases": ["결막염", "안구건조증", "알레르기"],
+        "description": "눈이 충혈되는 증상",
+        "severity": "경도",
+        "departments": ["안과"],
+    },
+    "눈가려": {
+        "diseases": ["알레르기성 결막염", "안구건조증"],
+        "description": "눈이 가려운 증상",
+        "severity": "경도",
+        "departments": ["안과"],
+    },
+    "눈물": {
+        "diseases": ["안구건조증", "결막염", "눈물관 막힘"],
+        "description": "눈물이 많이 나는 증상",
+        "severity": "경도",
+        "departments": ["안과"],
+    },
+    "눈떨림": {
+        "diseases": ["눈 피로", "마그네슘 부족", "스트레스"],
+        "description": "눈꺼풀이 떨리는 증상",
+        "severity": "경도",
+        "departments": ["안과"],
+    },
+    "눈부심": {
+        "diseases": ["각막염", "편두통", "녹내장"],
+        "description": "눈이 부신 증상",
+        "severity": "경도~중등도",
+        "departments": ["안과"],
+    },
+    "시력저하": {
+        "diseases": ["노안", "백내장", "녹내장"],
+        "description": "시력이 저하되는 증상",
+        "severity": "경도~중등도",
+        "departments": ["안과"],
+    },
+    "안보여": {
+        "diseases": ["시력 저하", "백내장", "녹내장"],
+        "description": "잘 안 보이는 증상",
+        "severity": "경도~중증",
+        "departments": ["안과"],
+    },
+    "눈앞번쩍": {
+        "diseases": ["비문증", "망막박리", "편두통"],
+        "description": "눈앞에 번쩍이는 증상",
+        "severity": "경도~중증",
+        "departments": ["안과"],
+    },
+    "날파리": {
+        "diseases": ["비문증(날파리증)", "후유리체 박리"],
+        "description": "눈앞에 날파리 같은 것이 보이는 증상",
+        "severity": "경도~중등도",
+        "departments": ["안과"],
+    },
+    "다래끼": {
+        "diseases": ["다래끼(맥립종)"],
+        "description": "다래끼 증상",
+        "severity": "경도",
+        "departments": ["안과"],
+    },
+
+    # ========== 정신건강 관련 ==========
     "불면증": {
         "diseases": ["불면증", "수면장애"],
         "description": "잠들기 어렵거나 수면 유지가 어려운 증상",
@@ -847,6 +2103,214 @@ SINGLE_SYMPTOM_TO_DISEASE = {
         "description": "지속적인 우울감과 무기력",
         "severity": "중등도~중증",
         "departments": ["정신건강의학과"],
+    },
+    "잠이안와": {
+        "diseases": ["불면증", "불안장애", "우울증"],
+        "description": "잠이 안 오는 증상",
+        "severity": "경도~중등도",
+        "departments": ["정신건강의학과"],
+    },
+    "잠못자": {
+        "diseases": ["불면증", "수면장애"],
+        "description": "잠을 못 자는 증상",
+        "severity": "경도~중등도",
+        "departments": ["정신건강의학과"],
+    },
+    "불안": {
+        "diseases": ["불안장애", "공황장애"],
+        "description": "불안한 증상",
+        "severity": "경도~중등도",
+        "departments": ["정신건강의학과"],
+    },
+    "우울": {
+        "diseases": ["우울증", "기분장애"],
+        "description": "우울한 증상",
+        "severity": "경도~중등도",
+        "departments": ["정신건강의학과"],
+    },
+    "무기력": {
+        "diseases": ["우울증", "만성피로증후군", "갑상선 기능저하"],
+        "description": "무기력한 증상",
+        "severity": "경도~중등도",
+        "departments": ["정신건강의학과", "내과"],
+    },
+    "의욕없": {
+        "diseases": ["우울증", "번아웃"],
+        "description": "의욕이 없는 증상",
+        "severity": "경도~중등도",
+        "departments": ["정신건강의학과"],
+    },
+    "집중안됨": {
+        "diseases": ["ADHD", "우울증", "불안장애"],
+        "description": "집중이 안 되는 증상",
+        "severity": "경도~중등도",
+        "departments": ["정신건강의학과"],
+    },
+    "공황": {
+        "diseases": ["공황장애"],
+        "description": "공황 증상",
+        "severity": "중등도",
+        "departments": ["정신건강의학과"],
+    },
+    "죽을것같": {
+        "diseases": ["공황장애", "불안장애"],
+        "description": "극심한 공포와 불안 - 공황발작 의심",
+        "severity": "중등도~중증",
+        "departments": ["정신건강의학과", "응급의학과"],
+    },
+
+    # ========== 심혈관 관련 ==========
+    "가슴아파": {
+        "diseases": ["협심증", "역류성 식도염", "늑간신경통"],
+        "description": "가슴이 아픈 증상",
+        "severity": "경도~중증",
+        "departments": ["내과", "응급의학과"],
+    },
+    "가슴답답": {
+        "diseases": ["협심증", "불안장애", "역류성 식도염"],
+        "description": "가슴이 답답한 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "두근거림": {
+        "diseases": ["부정맥", "빈맥", "불안장애"],
+        "description": "심장이 두근거리는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "심장두근": {
+        "diseases": ["부정맥", "빈맥", "공황장애"],
+        "description": "심장이 두근거리는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "심장쿵쿵": {
+        "diseases": ["부정맥", "빈맥", "불안"],
+        "description": "심장이 쿵쿵 뛰는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "부종": {
+        "diseases": ["심부전", "신장질환", "간질환"],
+        "description": "붓는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "다리부음": {
+        "diseases": ["하지부종", "심부전", "하지정맥류"],
+        "description": "다리가 붓는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+
+    # ========== 비뇨기 관련 ==========
+    "소변자주": {
+        "diseases": ["방광염", "과민성 방광", "전립선비대증"],
+        "description": "소변을 자주 보는 증상",
+        "severity": "경도~중등도",
+        "departments": ["비뇨의학과"],
+    },
+    "소변아파": {
+        "diseases": ["방광염", "요도염", "요로감염"],
+        "description": "소변 볼 때 아픈 증상",
+        "severity": "경도~중등도",
+        "departments": ["비뇨의학과"],
+    },
+    "혈뇨": {
+        "diseases": ["방광염", "요로결석", "신장암"],
+        "description": "소변에 피가 섞이는 증상",
+        "severity": "중등도~중증",
+        "departments": ["비뇨의학과"],
+    },
+    "잔뇨감": {
+        "diseases": ["전립선비대증", "방광염"],
+        "description": "소변 후에도 시원하지 않은 증상",
+        "severity": "경도~중등도",
+        "departments": ["비뇨의학과"],
+    },
+
+    # ========== 내분비/대사 관련 ==========
+    "피곤": {
+        "diseases": ["만성피로", "갑상선 기능저하", "빈혈"],
+        "description": "피곤한 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "피로": {
+        "diseases": ["만성피로증후군", "빈혈", "갑상선 이상"],
+        "description": "피로한 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "살빠짐": {
+        "diseases": ["갑상선 기능항진증", "당뇨병", "암"],
+        "description": "살이 빠지는 증상",
+        "severity": "경도~중증",
+        "departments": ["내과"],
+    },
+    "살찜": {
+        "diseases": ["갑상선 기능저하증", "대사증후군"],
+        "description": "살이 찌는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "목마름": {
+        "diseases": ["당뇨병", "탈수"],
+        "description": "갈증이 나는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "손떨림": {
+        "diseases": ["갑상선 기능항진증", "본태성 떨림", "파킨슨병"],
+        "description": "손이 떨리는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과", "신경과"],
+    },
+
+    # ========== 여성 질환 ==========
+    "생리통": {
+        "diseases": ["월경통", "자궁내막증", "자궁근종"],
+        "description": "생리 시 통증",
+        "severity": "경도~중등도",
+        "departments": ["산부인과"],
+    },
+    "생리불순": {
+        "diseases": ["다낭성 난소 증후군", "갑상선 이상", "조기폐경"],
+        "description": "생리가 불규칙한 증상",
+        "severity": "경도~중등도",
+        "departments": ["산부인과"],
+    },
+    "냉대하": {
+        "diseases": ["질염", "자궁경부염"],
+        "description": "질 분비물 이상",
+        "severity": "경도~중등도",
+        "departments": ["산부인과"],
+    },
+
+    # ========== 전신/기타 ==========
+    "열": {
+        "diseases": ["감기", "독감", "감염"],
+        "description": "열이 나는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "오한": {
+        "diseases": ["독감", "감염", "패혈증"],
+        "description": "오한이 나는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "몸살": {
+        "diseases": ["감기", "독감", "근육통"],
+        "description": "몸살 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
+    },
+    "온몸쑤심": {
+        "diseases": ["독감", "감기", "근육통"],
+        "description": "온몸이 쑤시는 증상",
+        "severity": "경도~중등도",
+        "departments": ["내과"],
     },
 }
 

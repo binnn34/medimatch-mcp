@@ -44,6 +44,46 @@ class SymptomAnalyzer:
 
         return substrings
 
+    def _fuzzy_match(self, symptom_key: str, normalized_input: str, input_substrings: Set[str]) -> bool:
+        """
+        증상 키워드와 사용자 입력 간의 퍼지 매칭
+
+        매칭 전략:
+        1. 정확한 포함 매칭 (symptom in input) - 2글자 이상
+        2. 역방향 매칭 (input의 일부가 symptom에 포함) - 3글자 이상 (오매칭 방지)
+        3. 부분 문자열 매칭 (3글자 이상 공통 부분)
+        """
+        symptom_normalized = self._normalize_text(symptom_key)
+
+        # 1. 정확한 포함 매칭 (증상 키워드가 입력에 포함)
+        # 2글자 이상 키워드도 정확히 포함되면 매칭 (뻐근, 지끈, 침침 등)
+        if len(symptom_normalized) >= 2 and symptom_normalized in normalized_input:
+            return True
+
+        # 2. 역방향 매칭: 입력의 부분 문자열이 증상 키워드에 포함
+        # 최소 3글자 이상만 매칭 (너무 짧으면 오매칭 발생)
+        min_match_length = 3
+        for sub in input_substrings:
+            if len(sub) >= min_match_length:
+                # 입력의 일부가 증상 키워드를 포함
+                if sub in symptom_normalized and len(symptom_normalized) <= len(sub) + 2:
+                    return True
+                # 증상 키워드의 일부가 입력에 포함
+                if symptom_normalized in sub:
+                    return True
+
+        # 3. 핵심 키워드 추출 매칭 (꾸르륵, 뻐근, 삐끗 등)
+        # 증상 키워드에서 핵심 부분 추출 (3~6글자)
+        # 단, 증상 키워드 자체가 3글자 이상이어야 함
+        if len(symptom_normalized) >= 3:
+            for length in range(3, min(len(symptom_normalized) + 1, 7)):
+                for i in range(len(symptom_normalized) - length + 1):
+                    keyword_part = symptom_normalized[i:i+length]
+                    if keyword_part in normalized_input:
+                        return True
+
+        return False
+
     def diagnose_disease(self, user_input: str) -> Dict:
         """
         증상을 분석하여 의심되는 질병(진단)을 반환
@@ -63,17 +103,9 @@ class SymptomAnalyzer:
             # 증상 조합의 모든 증상이 입력에 포함되는지 확인
             all_matched = True
             for symptom in symptom_combo:
-                symptom_normalized = self._normalize_text(symptom)
-                if symptom_normalized not in normalized_input:
-                    # 부분 매칭도 시도
-                    partial_match = any(
-                        symptom_normalized in sub or sub in symptom_normalized
-                        for sub in input_substrings
-                        if len(sub) >= 2
-                    )
-                    if not partial_match:
-                        all_matched = False
-                        break
+                if not self._fuzzy_match(symptom, normalized_input, input_substrings):
+                    all_matched = False
+                    break
 
             if all_matched:
                 matched_combo_diseases.append({
@@ -85,40 +117,44 @@ class SymptomAnalyzer:
                     "match_type": "combination",
                 })
 
-        # 2. 단일 증상 매칭
+        # 2. 단일 증상 매칭 (더 유연한 매칭)
         matched_single_diseases = []
-        for symptom_key, disease_info in self.single_symptom_to_disease.items():
-            symptom_normalized = self._normalize_text(symptom_key)
-            if symptom_normalized in normalized_input or symptom_normalized in input_substrings:
-                matched_single_diseases.append({
-                    "symptom": symptom_key,
-                    "diseases": disease_info["diseases"],
-                    "description": disease_info["description"],
-                    "severity": disease_info["severity"],
-                    "departments": disease_info["departments"],
-                    "match_type": "single",
-                })
+        matched_symptom_keys = set()  # 중복 방지
 
-        # 결과 조합 (복합 증상 우선)
+        for symptom_key, disease_info in self.single_symptom_to_disease.items():
+            if self._fuzzy_match(symptom_key, normalized_input, input_substrings):
+                # 같은 질병 목록을 가진 증상은 중복 제거
+                disease_tuple = tuple(disease_info["diseases"])
+                if disease_tuple not in matched_symptom_keys:
+                    matched_symptom_keys.add(disease_tuple)
+                    matched_single_diseases.append({
+                        "symptom": symptom_key,
+                        "diseases": disease_info["diseases"],
+                        "description": disease_info["description"],
+                        "severity": disease_info["severity"],
+                        "departments": disease_info["departments"],
+                        "match_type": "single",
+                    })
+
+        # 결과 조합 (복합 + 단일 모두 포함하여 더 많은 의심 질환 제공)
         all_diseases = []
         all_departments = []
 
-        if matched_combo_diseases:
-            # 복합 증상 매칭이 있으면 우선
-            for match in matched_combo_diseases:
-                all_diseases.extend(match["diseases"])
-                all_departments.extend(match["departments"])
-        elif matched_single_diseases:
-            # 단일 증상 매칭
-            for match in matched_single_diseases:
-                all_diseases.extend(match["diseases"])
-                all_departments.extend(match["departments"])
+        # 복합 증상 매칭 결과 추가
+        for match in matched_combo_diseases:
+            all_diseases.extend(match["diseases"])
+            all_departments.extend(match["departments"])
 
-        # 중복 제거
+        # 단일 증상 매칭 결과도 추가 (복합 매칭과 함께 표시)
+        for match in matched_single_diseases:
+            all_diseases.extend(match["diseases"])
+            all_departments.extend(match["departments"])
+
+        # 중복 제거 (순서 유지)
         unique_diseases = list(dict.fromkeys(all_diseases))
         unique_departments = list(dict.fromkeys(all_departments))
 
-        # 가장 관련성 높은 질병 정보
+        # 가장 관련성 높은 질병 정보 (복합 매칭 우선)
         primary_diagnosis = None
         if matched_combo_diseases:
             primary_diagnosis = matched_combo_diseases[0]

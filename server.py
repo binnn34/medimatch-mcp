@@ -149,6 +149,10 @@ async def search_hospitals(
             "current_page": page,
             "hospitals": result["hospitals"],
             "tip": "병원 상세 정보나 경로 안내가 필요하시면 카카오맵 MCP를 활용해보세요.",
+            "navigation_guide": {
+                "message": "각 병원의 directions_url을 클릭하면 카카오맵에서 길찾기가 가능합니다.",
+                "note": "directions_url 링크를 사용자에게 반드시 안내해주세요.",
+            },
         }
     else:
         return result
@@ -300,6 +304,12 @@ async def find_specialist_hospital(
         ),
     }
 
+    # 길찾기 안내 추가
+    response["navigation_guide"] = {
+        "message": "각 병원의 directions_url을 클릭하면 카카오맵에서 현재 위치부터 병원까지 길찾기가 가능합니다.",
+        "note": "directions_url 링크를 사용자에게 반드시 안내해주세요.",
+    }
+
     return response
 
 
@@ -394,6 +404,10 @@ async def search_nearby_hospitals(
             "total_count": len(hospitals),
             "hospitals": hospitals,
             "tip": "카카오맵 URL을 클릭하면 병원 상세 정보와 리뷰를 확인할 수 있습니다.",
+            "navigation_guide": {
+                "message": "각 병원의 directions_url을 클릭하면 카카오맵에서 길찾기가 가능합니다.",
+                "note": "directions_url 링크를 사용자에게 반드시 안내해주세요.",
+            },
         }
 
     return result
@@ -475,6 +489,10 @@ async def search_hospitals_near_place(
             "total_count": len(hospitals),
             "hospitals": hospitals,
             "tip": "카카오맵 URL을 클릭하면 병원 상세 정보와 리뷰를 확인할 수 있습니다.",
+            "navigation_guide": {
+                "message": "각 병원의 directions_url을 클릭하면 카카오맵에서 길찾기가 가능합니다.",
+                "note": "directions_url 링크를 사용자에게 반드시 안내해주세요.",
+            },
         }
 
     return result
@@ -549,6 +567,10 @@ async def search_nearby_with_pharmacy_by_place(
                 "list": pharmacies,
             },
             "tip": "진료 후 가까운 약국에서 처방전을 받으세요.",
+            "navigation_guide": {
+                "message": "각 병원/약국의 directions_url을 클릭하면 카카오맵에서 길찾기가 가능합니다.",
+                "note": "directions_url 링크를 사용자에게 반드시 안내해주세요.",
+            },
         }
 
     return result
@@ -603,6 +625,10 @@ async def search_nearby_with_pharmacy(
                 "list": pharmacies,
             },
             "tip": "진료 후 가까운 약국에서 처방전을 받으세요.",
+            "navigation_guide": {
+                "message": "각 병원/약국의 directions_url을 클릭하면 카카오맵에서 길찾기가 가능합니다.",
+                "note": "directions_url 링크를 사용자에게 반드시 안내해주세요.",
+            },
         }
 
     return result

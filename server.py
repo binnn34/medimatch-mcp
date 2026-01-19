@@ -732,15 +732,19 @@ def create_kakao_response(text: str, buttons: list = None, quick_replies: list =
 
 
 def create_kakao_cards_response(cards: list, quick_replies: list = None) -> dict:
-    """??? ???? ?? ?? ?? ??"""
-    outputs = []
-    for card in cards[:3]:
-        outputs.append({"basicCard": card})
+    """카카오 오픈빌더 카드 캐러셀 응답 형식 생성 (최대 10개)"""
+    # carousel을 사용하면 최대 10개 카드 가능
+    carousel = {
+        "carousel": {
+            "type": "basicCard",
+            "items": cards[:10]  # 최대 10개
+        }
+    }
 
     response = {
         "version": "2.0",
         "template": {
-            "outputs": outputs
+            "outputs": [carousel]
         }
     }
 
@@ -951,20 +955,20 @@ async def process_kakao_skill(user_message: str) -> dict:
             hospitals = result["hospitals"]
             cards = []
 
-            for h in hospitals[:3]:
+            for h in hospitals[:5]:  # 최대 5개로 변경
                 name = h.get("name", "")
                 distance = h.get("distance", "")
                 dist_text = f" ({distance}m)" if distance else ""
-                title = f"{name}{dist_text}" if name else "?? ??"
+                title = f"{name}{dist_text}" if name else "병원 정보"
 
                 address = h.get("road_address") or h.get("address") or ""
                 phone = h.get("phone") or ""
                 description_parts = []
                 if address:
-                    description_parts.append(f"??: {address}")
+                    description_parts.append(f"주소: {address}")
                 if phone:
-                    description_parts.append(f"??: {phone}")
-                description = "\n".join(description_parts) if description_parts else "?? ??"
+                    description_parts.append(f"전화: {phone}")
+                description = "\n".join(description_parts) if description_parts else "상세정보 없음"
 
                 coords = h.get("coordinates") or {}
                 x = coords.get("x")
@@ -992,13 +996,13 @@ async def process_kakao_skill(user_message: str) -> dict:
                 buttons = []
                 if map_url:
                     buttons.append({
-                        "label": "???? ??",
+                        "label": "카카오맵 보기",
                         "action": "webLink",
                         "webLinkUrl": map_url,
                     })
                 if directions_url:
                     buttons.append({
-                        "label": "???",
+                        "label": "길찾기",
                         "action": "webLink",
                         "webLinkUrl": directions_url,
                     })

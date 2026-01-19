@@ -1023,11 +1023,27 @@ def extract_intent(user_message: str) -> dict:
     # 3. 다른 병원 추천 요청
     # ============================================
     more_hospital_keywords = [
-        "다른", "또 다른", "다른 병원", "다른 곳", "새로운", "더 보여",
-        "더 찾아", "다른 데", "다른곳", "또다른", "더 없어", "더 알려",
-        "다른 추천", "다른거", "다른 거"
+        # 다른 병원 요청
+        "다른 병원", "다른곳", "다른 곳", "다른 데", "다른데",
+        "또 다른", "또다른", "다른거", "다른 거",
+        # 더 보기/찾기 요청
+        "더 보여", "더 찾아", "더 알려", "더 검색", "더 추천",
+        "더 없어", "더 있어", "더 없나", "더 있나",
+        # 새로운 추천 요청
+        "새로운", "다른 추천", "다시 찾아", "다시 검색", "다시 추천",
+        # 질문형
+        "없어?", "없나요", "없어요", "없을까", "또 없어", "또 있어",
+        # 추가 요청
+        "말고", "외에", "빼고",
     ]
-    if any(word in message for word in more_hospital_keywords):
+    # "다른" 단독은 "다른 병원", "다른 곳" 등과 함께 쓰일 때만 인식
+    more_hospital_patterns = ["다른", "또", "더"]
+    has_more_keyword = any(word in message for word in more_hospital_keywords)
+    has_pattern_with_hospital = any(
+        pattern in message and ("병원" in message or "추천" in message or "찾아" in message or "검색" in message or "알려" in message)
+        for pattern in more_hospital_patterns
+    )
+    if has_more_keyword or has_pattern_with_hospital:
         return {"intent": "more_hospitals"}
 
     # ============================================
@@ -1585,10 +1601,17 @@ async def process_kakao_skill(user_message: str, user_id: str = "anonymous") -> 
                     y=location["y"],
                     radius=5000,
                     department=primary_dept,
-                    size=3,
+                    size=10,  # 더 많이 검색해서 "다른 병원" 요청에 대비
                 )
                 if result["success"]:
                     hospitals = result.get("hospitals", [])
+
+                # 세션 캐시 저장 (다른 병원 추천 기능용)
+                cache["region"] = region
+                cache["department"] = primary_dept
+                cache["location"] = {"x": location["x"], "y": location["y"]}
+                cache["shown_ids"] = set()
+                cache["last_updated"] = current_time
 
         if hospitals:
             response_text += f"📍 {region} 주변 {departments[0]}"
@@ -1596,6 +1619,10 @@ async def process_kakao_skill(user_message: str, user_id: str = "anonymous") -> 
             # 병원 카드 생성 (카카오맵, 길찾기 링크 포함)
             cards = []
             for h in hospitals[:3]:
+                # 세션 캐시에 보여준 병원 ID 저장
+                hospital_id = h.get("id")
+                if hospital_id:
+                    cache["shown_ids"].add(hospital_id)
                 name = h.get("name", "")
                 if not name:
                     continue
@@ -1652,7 +1679,9 @@ async def process_kakao_skill(user_message: str, user_id: str = "anonymous") -> 
                 cards.append(card)
 
             # 빠른 응답
-            quick_replies = []
+            quick_replies = [
+                {"label": "다른 병원 더 보기", "message": "다른 병원 추천해줘"}
+            ]
             if departments:
                 quick_replies.append({
                     "label": f"서울 {departments[0]} 찾기",

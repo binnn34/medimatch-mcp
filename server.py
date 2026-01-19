@@ -683,7 +683,7 @@ import re
 # ============================================
 
 # 세션별 검색 결과 캐시 (다른 병원 추천 기능용)
-# key: user_id, value: {"region": str, "department": str, "shown_ids": set, "location": dict}
+# key: user_id, value: {"region": str, "department": str, "shown_ids": set, "location": dict, "last_recommendation": dict}
 from collections import defaultdict
 import time
 
@@ -692,11 +692,136 @@ search_session_cache = defaultdict(lambda: {
     "department": None,
     "shown_ids": set(),
     "location": None,
-    "last_updated": 0
+    "last_updated": 0,
+    "last_recommendation": None,  # 마지막 추천 정보 (이유 설명용)
 })
 
 # 캐시 만료 시간 (30분)
 CACHE_EXPIRY_SECONDS = 1800
+
+
+# ============================================
+# 진료과목별 추천 이유 데이터베이스
+# ============================================
+DEPARTMENT_REASONS = {
+    # 배/복부 관련
+    "배": {
+        "내과": "소화기 문제 (위염, 장염, 소화불량, 변비 등)",
+        "정형외과": "척추/근육 문제로 인한 연관통 (허리 디스크가 복부 통증으로 나타날 수 있음)",
+        "외과": "충수염(맹장), 탈장 등 수술이 필요할 수 있는 질환",
+        "산부인과": "여성의 경우 생리통, 자궁/난소 관련 질환",
+        "비뇨의학과": "신장결석, 요로감염 등 비뇨기 문제",
+    },
+    "복통": {
+        "내과": "위장관 질환 (위염, 장염, 과민성대장증후군 등)",
+        "외과": "급성 복증 (충수염, 담낭염, 장폐색 등)",
+        "산부인과": "여성 골반 질환, 자궁외임신 등",
+    },
+    # 머리 관련
+    "머리": {
+        "신경과": "편두통, 긴장성두통, 뇌혈관 질환",
+        "이비인후과": "부비동염(축농증)으로 인한 두통",
+        "안과": "눈 피로, 녹내장으로 인한 두통",
+        "정형외과": "경추(목) 문제로 인한 두통",
+        "정신건강의학과": "스트레스성 두통, 긴장성 두통",
+    },
+    # 허리 관련
+    "허리": {
+        "정형외과": "디스크, 척추관협착증, 근육/인대 손상",
+        "신경외과": "심한 디스크 탈출, 수술이 필요한 척추 질환",
+        "재활의학과": "만성 허리 통증, 물리치료 필요",
+        "내과": "신장 질환(신우신염, 신장결석)으로 인한 허리 통증",
+    },
+    # 피부 관련
+    "피부": {
+        "피부과": "피부 질환 전문 진료 (습진, 아토피, 두드러기 등)",
+        "알레르기내과": "알레르기 검사, 면역 관련 피부 질환",
+        "내과": "내부 질환으로 인한 피부 증상 (간 질환, 갑상선 등)",
+    },
+    # 가슴 관련
+    "가슴": {
+        "내과": "심장 질환, 폐 질환, 역류성식도염",
+        "흉부외과": "심각한 심장/폐 질환, 수술적 치료",
+        "정형외과": "갈비뼈 손상, 흉추 문제",
+        "정신건강의학과": "공황장애, 불안으로 인한 가슴 답답함",
+    },
+    # 목 관련
+    "목": {
+        "이비인후과": "인후염, 편도염, 성대 질환",
+        "내과": "갑상선 질환, 림프절 부종",
+        "정형외과": "경추 디스크, 목 근육 문제",
+    },
+    # 관절 관련
+    "관절": {
+        "정형외과": "관절염, 인대 손상, 골절",
+        "류마티스내과": "류마티스 관절염, 자가면역 질환",
+        "재활의학과": "만성 관절통, 재활 치료",
+    },
+    # 눈 관련
+    "눈": {
+        "안과": "시력 문제, 눈 질환 전문",
+        "신경과": "시신경 문제, 복시",
+        "내과": "당뇨망막병증 등 전신 질환 관련",
+    },
+    # 어지러움 관련
+    "어지러움": {
+        "이비인후과": "이석증, 메니에르병 등 전정기관 문제",
+        "신경과": "뇌혈관 질환, 신경계 문제",
+        "내과": "빈혈, 저혈압, 기립성 저혈압",
+        "정신건강의학과": "불안장애로 인한 어지러움",
+    },
+}
+
+# 증상-진료과목 연결 설명
+SYMPTOM_DEPARTMENT_EXPLANATIONS = {
+    ("배", "정형외과"): "배 통증이 항상 소화기 문제만은 아니에요. 허리 디스크나 척추 문제가 있으면 신경이 눌려서 복부로 통증이 전달될 수 있어요. 특히 자세를 바꿀 때 통증이 변하면 척추 문제일 가능성이 있어요.",
+    ("배", "내과"): "배 통증의 가장 흔한 원인은 소화기 질환이에요. 위염, 장염, 소화불량, 과민성대장증후군 등이 대표적이에요.",
+    ("머리", "정형외과"): "두통이 목에서 시작되거나, 목을 움직일 때 더 아프다면 경추(목뼈) 문제일 수 있어요. 목 디스크나 근육 긴장이 두통을 유발할 수 있어요.",
+    ("허리", "내과"): "허리 통증이 옆구리까지 퍼지거나, 소변 볼 때 문제가 있다면 신장 질환일 수 있어요. 신장결석이나 신우신염은 허리 통증을 유발해요.",
+    ("가슴", "정형외과"): "가슴 통증이 숨 쉴 때나 움직일 때 더 아프다면 갈비뼈나 흉추 문제일 수 있어요. 근육통이나 늑연골염도 가슴 통증의 원인이에요.",
+    ("가슴", "정신건강의학과"): "가슴이 답답하고 두근거리는데 검사상 이상이 없다면 공황장애나 불안장애일 수 있어요. 심리적 요인도 신체 증상으로 나타날 수 있어요.",
+}
+
+
+def get_department_reason(symptom_area: str, department: str) -> str:
+    """특정 증상에 대해 해당 진료과목을 추천하는 이유 반환"""
+    # 정확한 매칭 시도
+    if symptom_area in DEPARTMENT_REASONS:
+        reasons = DEPARTMENT_REASONS[symptom_area]
+        if department in reasons:
+            return reasons[department]
+
+    # 부분 매칭 시도
+    for area, reasons in DEPARTMENT_REASONS.items():
+        if area in symptom_area or symptom_area in area:
+            if department in reasons:
+                return reasons[department]
+
+    # 기본 설명
+    default_reasons = {
+        "내과": "내장 기관 관련 질환 진료",
+        "외과": "수술적 치료가 필요한 질환",
+        "정형외과": "뼈, 관절, 근육, 인대 질환",
+        "신경과": "신경계 질환 진료",
+        "피부과": "피부 질환 전문 진료",
+        "이비인후과": "귀, 코, 목 질환 진료",
+        "안과": "눈 관련 질환 진료",
+        "산부인과": "여성 질환 및 임신 관련",
+        "비뇨의학과": "비뇨기 및 남성 질환",
+        "정신건강의학과": "정신건강 및 심리 질환",
+        "재활의학과": "재활 치료 및 만성 통증",
+    }
+    return default_reasons.get(department, f"{department} 전문 진료")
+
+
+def get_why_explanation(symptom_area: str, department: str) -> str:
+    """'왜 OO과?' 질문에 대한 상세 설명 반환"""
+    key = (symptom_area, department)
+    if key in SYMPTOM_DEPARTMENT_EXPLANATIONS:
+        return SYMPTOM_DEPARTMENT_EXPLANATIONS[key]
+
+    reason = get_department_reason(symptom_area, department)
+    return f"{department}를 추천드린 이유는 {reason} 때문이에요."
 
 
 def get_user_id_from_request(body: dict) -> str:
@@ -809,7 +934,42 @@ def extract_intent(user_message: str) -> dict:
         return {"intent": "greeting"}
 
     # ============================================
-    # 2. 도움말
+    # 2. 추천 이유 질문 (왜 OO과? 등) - 우선순위 높음
+    # ============================================
+    why_question_patterns = [
+        # "왜 정형외과?" 패턴
+        r'왜\s*(내과|외과|피부과|정형외과|이비인후과|안과|치과|산부인과|소아과|신경과|신경외과|정신과|비뇨기과|재활의학과|가정의학과|흉부외과)',
+        # "정형외과는 왜?" 패턴
+        r'(내과|외과|피부과|정형외과|이비인후과|안과|치과|산부인과|소아과|신경과|신경외과|정신과|비뇨기과|재활의학과|가정의학과|흉부외과).{0,5}(왜|이유|뭐)',
+        # "정형외과 왜 가?" 패턴
+        r'(내과|외과|피부과|정형외과|이비인후과|안과|치과|산부인과|소아과|신경과|신경외과|정신과|비뇨기과|재활의학과|가정의학과|흉부외과).{0,10}(왜|이유)',
+    ]
+
+    # "왜?" 질문 키워드
+    why_keywords = [
+        "왜 ", "이유가", "이유는", "이유 ", "무슨 상관", "상관이", "관련이",
+        "이해가 안", "이해안", "왜요", "왜죠", "왜지", "왜야", "웬", "의아",
+        "뭔 상관", "무슨상관", "어떤 관계", "무슨 관계",
+    ]
+
+    # 진료과목이 메시지에 있고 + 왜? 질문 패턴이 있는 경우
+    if dept_match:
+        has_why_pattern = any(re.search(pattern, message) for pattern in why_question_patterns)
+        has_why_keyword = any(word in message for word in why_keywords)
+
+        if has_why_pattern or has_why_keyword:
+            return {
+                "intent": "explain_recommendation",
+                "department": dept_match.group(1),
+            }
+
+    # "왜" 키워드만 있는 경우 (진료과목 없이) - 이전 추천에 대한 질문일 수 있음
+    simple_why_patterns = ["왜요", "왜죠", "왜지", "왜야", "이유가 뭐", "왜 그래", "이해가 안 돼", "이해안돼"]
+    if any(word in message for word in simple_why_patterns) and len(message) < 20:
+        return {"intent": "explain_recommendation", "department": None}
+
+    # ============================================
+    # 3. 도움말
     # ============================================
     help_keywords = [
         "도움", "사용법", "뭐 할 수", "기능", "어떻게 써", "사용 방법",
@@ -1082,8 +1242,93 @@ async def process_kakao_skill(user_message: str, user_id: str = "anonymous") -> 
             "department": None,
             "shown_ids": set(),
             "location": None,
-            "last_updated": 0
+            "last_updated": 0,
+            "last_recommendation": None,
         }
+
+    # ============================================
+    # 추천 이유 설명 처리 (왜 OO과?)
+    # ============================================
+    if intent == "explain_recommendation":
+        asked_department = intent_data.get("department")
+        cache = search_session_cache[user_id]
+        last_rec = cache.get("last_recommendation")
+
+        # 1. 특정 진료과목에 대해 물어본 경우
+        if asked_department:
+            if last_rec and last_rec.get("symptom_area"):
+                symptom_area = last_rec["symptom_area"]
+                explanation = get_why_explanation(symptom_area, asked_department)
+
+                response_text = f"❓ 왜 {asked_department}를 추천했나요?\n\n"
+                response_text += explanation + "\n\n"
+
+                # 다른 진료과목 옵션도 설명
+                if symptom_area in DEPARTMENT_REASONS:
+                    other_depts = [d for d in DEPARTMENT_REASONS[symptom_area].keys() if d != asked_department]
+                    if other_depts:
+                        response_text += "📋 다른 가능성:\n"
+                        for dept in other_depts[:2]:
+                            reason = get_department_reason(symptom_area, dept)
+                            response_text += f"• {dept}: {reason}\n"
+
+                response_text += "\n💡 증상에 따라 적합한 진료과가 달라요. 추가 증상이 있으시면 알려주세요!"
+
+                quick_replies = []
+                if last_rec.get("departments"):
+                    for dept in last_rec["departments"][:2]:
+                        if dept != asked_department:
+                            quick_replies.append({
+                                "label": f"왜 {dept}?",
+                                "message": f"왜 {dept}를 추천했어?"
+                            })
+                quick_replies.append({"label": "증상 다시 말하기", "message": "증상 분석해줘"})
+
+                return create_kakao_response(response_text, quick_replies=quick_replies)
+            else:
+                # 이전 추천 정보가 없는 경우
+                reason = get_department_reason("", asked_department)
+                return create_kakao_response(
+                    f"❓ {asked_department}는요...\n\n"
+                    f"{reason}\n\n"
+                    "💡 증상을 말씀해주시면 왜 해당 진료과를 추천했는지 더 자세히 설명드릴 수 있어요!",
+                    quick_replies=[
+                        {"label": "증상 말하기", "message": "배가 아파요"},
+                        {"label": "도움말", "message": "도움말"},
+                    ]
+                )
+
+        # 2. "왜요?" 같은 단순 질문 (진료과목 없음)
+        else:
+            if last_rec and last_rec.get("departments") and last_rec.get("symptom_area"):
+                symptom_area = last_rec["symptom_area"]
+                departments = last_rec["departments"]
+
+                response_text = f"❓ 추천 이유 설명\n\n"
+                response_text += f"'{symptom_area}' 증상으로 다음 진료과를 추천드렸어요:\n\n"
+
+                for dept in departments[:3]:
+                    reason = get_department_reason(symptom_area, dept)
+                    response_text += f"• {dept}: {reason}\n"
+
+                response_text += "\n💡 특정 진료과에 대해 더 궁금하시면 물어봐주세요!"
+
+                quick_replies = [
+                    {"label": f"왜 {dept}?", "message": f"왜 {dept}?"}
+                    for dept in departments[:2]
+                ]
+                quick_replies.append({"label": "병원 찾기", "message": f"서울 {departments[0]} 찾아줘"})
+
+                return create_kakao_response(response_text, quick_replies=quick_replies)
+            else:
+                return create_kakao_response(
+                    "이전에 추천드린 진료과가 없어요.\n\n"
+                    "증상을 말씀해주시면 적합한 진료과와 이유를 알려드릴게요!",
+                    quick_replies=[
+                        {"label": "증상 말하기", "message": "배가 아파요"},
+                        {"label": "도움말", "message": "도움말"},
+                    ]
+                )
 
     # 다른 병원 추천 요청 처리
     if intent == "more_hospitals":
@@ -1249,6 +1494,14 @@ async def process_kakao_skill(user_message: str, user_id: str = "anonymous") -> 
         diagnosis = symptom_analyzer.diagnose_disease(symptoms)
         analysis = symptom_analyzer.analyze_symptoms(symptoms)
 
+        # 증상 부위 추출 (이유 설명용)
+        symptom_area = ""
+        body_parts = ["배", "머리", "허리", "가슴", "목", "피부", "눈", "귀", "관절", "어지러"]
+        for part in body_parts:
+            if part in symptoms:
+                symptom_area = part
+                break
+
         # 응답 텍스트 구성
         response_text = ""
 
@@ -1262,7 +1515,22 @@ async def process_kakao_skill(user_message: str, user_id: str = "anonymous") -> 
         # 추천 진료과
         departments = diagnosis["recommended_departments"] if diagnosis["has_diagnosis"] else analysis["recommended_departments"]
         if departments:
-            response_text += f"🏥 추천 진료과: {', '.join(departments[:2])}\n\n"
+            # 진료과목과 함께 간단한 이유 표시
+            response_text += f"🏥 추천 진료과:\n"
+            for dept in departments[:2]:
+                reason = get_department_reason(symptom_area, dept)
+                response_text += f"• {dept} - {reason}\n"
+            response_text += "\n"
+
+        # 세션 캐시에 마지막 추천 정보 저장 (이유 질문 대비)
+        cache = search_session_cache[user_id]
+        cache["last_recommendation"] = {
+            "symptom_area": symptom_area,
+            "symptoms": symptoms,
+            "departments": departments,
+            "diseases": diagnosis.get("suspected_diseases", []),
+        }
+        cache["last_updated"] = current_time
 
         # 지역이 있으면 병원 검색
         hospitals = []
@@ -1294,13 +1562,19 @@ async def process_kakao_skill(user_message: str, user_id: str = "anonymous") -> 
             response_text += "💡 지역을 알려주시면 주변 병원을 찾아드릴게요.\n"
             response_text += "예: \"강남 피부과\", \"홍대 근처 정형외과\""
 
+        # 빠른 응답에 "왜?" 질문 옵션 추가
         quick_replies = []
+        if departments and len(departments) >= 2:
+            # 두 번째 진료과에 대해 "왜?" 질문 유도 (의아할 수 있는 추천)
+            quick_replies.append({
+                "label": f"왜 {departments[1]}?",
+                "message": f"왜 {departments[1]}를 추천했어?"
+            })
         if departments:
-            for dept in departments[:2]:
-                quick_replies.append({
-                    "label": f"서울 {dept} 찾기",
-                    "message": f"서울 {dept} 찾아줘"
-                })
+            quick_replies.append({
+                "label": f"서울 {departments[0]} 찾기",
+                "message": f"서울 {departments[0]} 찾아줘"
+            })
 
         return create_kakao_response(response_text, quick_replies=quick_replies)
 

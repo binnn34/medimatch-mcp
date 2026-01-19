@@ -943,6 +943,9 @@ async def process_kakao_skill(user_message: str, user_id: str = "anonymous") -> 
                 card = {
                     "title": title,
                     "description": description,
+                    "thumbnail": {
+                        "imageUrl": "https://t1.kakaocdn.net/openbuilder/sample/img_005.jpg"
+                    },
                 }
 
                 buttons = []
@@ -1160,6 +1163,9 @@ async def process_kakao_skill(user_message: str, user_id: str = "anonymous") -> 
                 card = {
                     "title": title,
                     "description": description,
+                    "thumbnail": {
+                        "imageUrl": "https://t1.kakaocdn.net/openbuilder/sample/img_005.jpg"
+                    },
                 }
 
                 buttons = []

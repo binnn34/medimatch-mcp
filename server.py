@@ -672,19 +672,50 @@ async def search_specialist_with_kakao(
     return result
 
 
+# 헬스체크 엔드포인트 (UptimeRobot 모니터링용)
+from starlette.applications import Starlette
+from starlette.routing import Route, Mount
+from starlette.responses import JSONResponse
+import uvicorn
+
+
+async def health_check(request):
+    """서버 상태 확인용 헬스체크 엔드포인트"""
+    return JSONResponse({"status": "ok", "service": "MediMatch MCP Server"})
+
+
+async def root(request):
+    """루트 경로 - 서비스 정보 제공"""
+    return JSONResponse({
+        "service": "MediMatch",
+        "description": "AI 기반 증상 분석 및 전문 병원 매칭 MCP 서버",
+        "mcp_endpoint": "/mcp",
+        "health_check": "/health",
+        "status": "running"
+    })
+
+
 # 서버 실행
 if __name__ == "__main__":
     import os
     from src.config import HOST, PORT
 
     print(f"🏥 MediMatch MCP Server 시작")
-    print(f"📍 Endpoint: http://{HOST}:{PORT}/mcp")
+    print(f"📍 MCP Endpoint: http://{HOST}:{PORT}/mcp")
+    print(f"💚 Health Check: http://{HOST}:{PORT}/health")
     print(f"🔧 Transport: Streamable HTTP")
 
-    # Streamable HTTP로 실행 (PlayMCP 호환)
-    mcp.run(
-        transport="streamable-http",
-        host=HOST,
-        port=PORT,
-        path="/mcp",
+    # MCP 앱 가져오기
+    mcp_app = mcp.streamable_http_app()
+
+    # Starlette 앱으로 래핑 (헬스체크 + MCP)
+    app = Starlette(
+        routes=[
+            Route("/", root),
+            Route("/health", health_check),
+            Mount("/mcp", app=mcp_app),
+        ]
     )
+
+    # uvicorn으로 실행
+    uvicorn.run(app, host=HOST, port=int(PORT))

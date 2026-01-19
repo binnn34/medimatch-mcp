@@ -731,6 +731,32 @@ def create_kakao_response(text: str, buttons: list = None, quick_replies: list =
     return response
 
 
+def create_kakao_cards_response(cards: list, quick_replies: list = None) -> dict:
+    """??? ???? ?? ?? ?? ??"""
+    outputs = []
+    for card in cards[:3]:
+        outputs.append({"basicCard": card})
+
+    response = {
+        "version": "2.0",
+        "template": {
+            "outputs": outputs
+        }
+    }
+
+    if quick_replies:
+        response["template"]["quickReplies"] = [
+            {
+                "label": qr.get("label", ""),
+                "action": "message",
+                "messageText": qr.get("message", qr.get("label", ""))
+            }
+            for qr in quick_replies[:10]
+        ]
+
+    return response
+
+
 def extract_intent(user_message: str) -> dict:
     """사용자 메시지에서 의도 추출"""
     message = user_message.lower()
@@ -923,19 +949,66 @@ async def process_kakao_skill(user_message: str) -> dict:
 
         if result["success"] and result.get("hospitals"):
             hospitals = result["hospitals"]
-            response_text = f"📍 {region} 주변 {department}\n\n"
+            cards = []
 
-            for i, h in enumerate(hospitals[:5], 1):
+            for h in hospitals[:3]:
                 name = h.get("name", "")
                 distance = h.get("distance", "")
-                phone = h.get("phone", "")
                 dist_text = f" ({distance}m)" if distance else ""
-                phone_text = f"\n   📞 {phone}" if phone else ""
-                response_text += f"{i}. {name}{dist_text}{phone_text}\n\n"
+                title = f"{name}{dist_text}" if name else "?? ??"
 
-            response_text += "💡 병원명을 카카오맵에서 검색하면\n상세정보와 길찾기가 가능해요."
+                address = h.get("road_address") or h.get("address") or ""
+                phone = h.get("phone") or ""
+                description_parts = []
+                if address:
+                    description_parts.append(f"??: {address}")
+                if phone:
+                    description_parts.append(f"??: {phone}")
+                description = "\n".join(description_parts) if description_parts else "?? ??"
 
-            return create_kakao_response(response_text)
+                coords = h.get("coordinates") or {}
+                x = coords.get("x")
+                y = coords.get("y")
+
+                map_url = h.get("kakao_map_url")
+                if not map_url and name and x and y:
+                    map_url = kakao_client.generate_map_url(name, x, y)
+
+                directions_url = None
+                if name and x and y:
+                    directions_url = kakao_client.generate_directions_url(
+                        dest_name=name,
+                        dest_x=x,
+                        dest_y=y,
+                        origin_x=location["x"],
+                        origin_y=location["y"],
+                    )
+
+                card = {
+                    "title": title,
+                    "description": description,
+                }
+
+                buttons = []
+                if map_url:
+                    buttons.append({
+                        "label": "???? ??",
+                        "action": "webLink",
+                        "webLinkUrl": map_url,
+                    })
+                if directions_url:
+                    buttons.append({
+                        "label": "???",
+                        "action": "webLink",
+                        "webLinkUrl": directions_url,
+                    })
+                if buttons:
+                    card["buttons"] = buttons
+
+                cards.append(card)
+
+            return create_kakao_cards_response(cards)
+
         else:
             return create_kakao_response(
                 f"{region} 주변에서 {department}를 찾지 못했어요.\n"

@@ -673,15 +673,18 @@ async def search_specialist_with_kakao(
 
 
 # 헬스체크 엔드포인트 추가 (UptimeRobot 모니터링용)
+from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 
-async def health_check(request):
+@mcp.custom_route("/health", methods=["GET"])
+async def health_check(request: Request) -> JSONResponse:
     """서버 상태 확인용 헬스체크 엔드포인트"""
     return JSONResponse({"status": "ok", "service": "MediMatch MCP Server"})
 
 
-async def root(request):
+@mcp.custom_route("/", methods=["GET"])
+async def root(request: Request) -> JSONResponse:
     """루트 경로 - 서비스 정보 제공"""
     return JSONResponse({
         "service": "MediMatch",
@@ -690,11 +693,6 @@ async def root(request):
         "health_check": "/health",
         "status": "running"
     })
-
-
-# FastMCP에 커스텀 라우트 추가
-mcp.add_route("/", root, methods=["GET"])
-mcp.add_route("/health", health_check, methods=["GET"])
 
 
 # 서버 실행

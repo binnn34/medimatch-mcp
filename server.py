@@ -682,6 +682,30 @@ import re
 # 카카오 i 오픈빌더 스킬 서버 엔드포인트
 # ============================================
 
+# 세션별 검색 결과 캐시 (다른 병원 추천 기능용)
+# key: user_id, value: {"region": str, "department": str, "shown_ids": set, "location": dict}
+from collections import defaultdict
+import time
+
+search_session_cache = defaultdict(lambda: {
+    "region": None,
+    "department": None,
+    "shown_ids": set(),
+    "location": None,
+    "last_updated": 0
+})
+
+# 캐시 만료 시간 (30분)
+CACHE_EXPIRY_SECONDS = 1800
+
+
+def get_user_id_from_request(body: dict) -> str:
+    """카카오 요청에서 사용자 ID 추출"""
+    user_request = body.get("userRequest", {})
+    user = user_request.get("user", {})
+    return user.get("id", "anonymous")
+
+
 def create_kakao_response(text: str, buttons: list = None, quick_replies: list = None) -> dict:
     """카카오 오픈빌더 응답 형식 생성"""
     outputs = []
@@ -773,6 +797,11 @@ def extract_intent(user_message: str) -> dict:
     if any(word in message for word in ["도움", "사용법", "뭐 할 수", "기능"]):
         return {"intent": "help"}
 
+    # 다른 병원 추천 요청 (이전 검색 결과 제외하고 새로운 병원 검색)
+    more_hospital_keywords = ["다른", "또 다른", "다른 병원", "다른 곳", "새로운", "더 보여", "더 찾아", "다른 데"]
+    if any(word in message for word in more_hospital_keywords):
+        return {"intent": "more_hospitals"}
+
     # 병원 검색 (지역 + 과목)
     hospital_keywords = ["병원", "의원", "클리닉", "찾아", "검색", "추천", "알려"]
     region_pattern = r'(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주|강남|홍대|신촌|서면|해운대|동성로|판교|분당|첨단)'
@@ -815,10 +844,140 @@ def extract_intent(user_message: str) -> dict:
     }
 
 
-async def process_kakao_skill(user_message: str) -> dict:
+async def process_kakao_skill(user_message: str, user_id: str = "anonymous") -> dict:
     """카카오 스킬 요청 처리"""
     intent_data = extract_intent(user_message)
     intent = intent_data.get("intent")
+
+    # 캐시 만료 체크
+    current_time = time.time()
+    if current_time - search_session_cache[user_id]["last_updated"] > CACHE_EXPIRY_SECONDS:
+        search_session_cache[user_id] = {
+            "region": None,
+            "department": None,
+            "shown_ids": set(),
+            "location": None,
+            "last_updated": 0
+        }
+
+    # 다른 병원 추천 요청 처리
+    if intent == "more_hospitals":
+        cache = search_session_cache[user_id]
+
+        if not cache["region"] or not cache["department"] or not cache["location"]:
+            return create_kakao_response(
+                "이전에 검색하신 병원 정보가 없어요.\n\n"
+                "먼저 병원을 검색해주세요!\n"
+                "예: \"홍대 이비인후과 찾아줘\"",
+                quick_replies=[
+                    {"label": "홍대 이비인후과", "message": "홍대 이비인후과 찾아줘"},
+                    {"label": "강남 피부과", "message": "강남 피부과 찾아줘"},
+                ]
+            )
+
+        # 더 많은 병원 검색 (size를 늘려서 검색)
+        result = await kakao_client.get_nearby_hospitals(
+            x=cache["location"]["x"],
+            y=cache["location"]["y"],
+            radius=7000,  # 검색 반경 확대
+            department=cache["department"],
+            size=15,  # 더 많이 검색
+        )
+
+        if result["success"] and result.get("hospitals"):
+            hospitals = result["hospitals"]
+
+            # 이미 보여준 병원 제외
+            new_hospitals = [
+                h for h in hospitals
+                if h.get("id") not in cache["shown_ids"]
+            ]
+
+            if not new_hospitals:
+                return create_kakao_response(
+                    f"{cache['region']} 주변에서 더 이상 찾을 수 있는 {cache['department']}이 없어요.\n\n"
+                    "다른 지역이나 진료과를 검색해보세요!",
+                    quick_replies=[
+                        {"label": "서울 전체 검색", "message": f"서울 {cache['department']} 찾아줘"},
+                        {"label": "다른 진료과", "message": "도움말"},
+                    ]
+                )
+
+            # 새로운 병원 카드 생성
+            cards = []
+            for h in new_hospitals[:5]:
+                hospital_id = h.get("id")
+                if hospital_id:
+                    cache["shown_ids"].add(hospital_id)
+
+                name = h.get("name", "")
+                title = name if name else "병원 정보"
+
+                address = h.get("road_address") or h.get("address") or ""
+                phone = h.get("phone") or ""
+                description_parts = []
+                if address:
+                    description_parts.append(f"주소: {address}")
+                if phone:
+                    description_parts.append(f"전화: {phone}")
+                description = "\n".join(description_parts) if description_parts else "상세정보 없음"
+
+                coords = h.get("coordinates") or {}
+                x = coords.get("x")
+                y = coords.get("y")
+
+                map_url = h.get("kakao_map_url")
+                if not map_url and name and x and y:
+                    map_url = kakao_client.generate_map_url(name, x, y)
+
+                directions_url = None
+                if name and x and y:
+                    directions_url = kakao_client.generate_directions_url(
+                        dest_name=name,
+                        dest_x=x,
+                        dest_y=y,
+                        origin_x=cache["location"]["x"],
+                        origin_y=cache["location"]["y"],
+                    )
+
+                card = {
+                    "title": title,
+                    "description": description,
+                }
+
+                buttons = []
+                if map_url:
+                    buttons.append({
+                        "label": "카카오맵 보기",
+                        "action": "webLink",
+                        "webLinkUrl": map_url,
+                    })
+                if directions_url:
+                    buttons.append({
+                        "label": "길찾기",
+                        "action": "webLink",
+                        "webLinkUrl": directions_url,
+                    })
+                if buttons:
+                    card["buttons"] = buttons
+
+                cards.append(card)
+
+            cache["last_updated"] = current_time
+
+            return create_kakao_cards_response(
+                cards,
+                quick_replies=[
+                    {"label": "다른 병원 더 보기", "message": "다른 병원 추천해줘"},
+                ]
+            )
+
+        return create_kakao_response(
+            f"{cache['region']} 주변에서 더 찾을 수 있는 {cache['department']}이 없어요.",
+            quick_replies=[
+                {"label": "범위 넓혀 검색", "message": f"서울 {cache['department']} 찾아줘"},
+            ]
+        )
 
     # 인사
     if intent == "greeting":
@@ -955,11 +1114,21 @@ async def process_kakao_skill(user_message: str) -> dict:
             hospitals = result["hospitals"]
             cards = []
 
-            for h in hospitals[:5]:  # 최대 5개로 변경
+            # 세션 캐시 저장 (다른 병원 추천 기능용)
+            cache = search_session_cache[user_id]
+            cache["region"] = region
+            cache["department"] = department
+            cache["location"] = {"x": location["x"], "y": location["y"]}
+            cache["shown_ids"] = set()
+            cache["last_updated"] = current_time
+
+            for h in hospitals[:5]:
+                hospital_id = h.get("id")
+                if hospital_id:
+                    cache["shown_ids"].add(hospital_id)
+
                 name = h.get("name", "")
-                distance = h.get("distance", "")
-                dist_text = f" ({distance}m)" if distance else ""
-                title = f"{name}{dist_text}" if name else "병원 정보"
+                title = name if name else "병원 정보"
 
                 address = h.get("road_address") or h.get("address") or ""
                 phone = h.get("phone") or ""
@@ -1011,7 +1180,12 @@ async def process_kakao_skill(user_message: str) -> dict:
 
                 cards.append(card)
 
-            return create_kakao_cards_response(cards)
+            return create_kakao_cards_response(
+                cards,
+                quick_replies=[
+                    {"label": "다른 병원 더 보기", "message": "다른 병원 추천해줘"},
+                ]
+            )
 
         else:
             return create_kakao_response(
@@ -1073,15 +1247,16 @@ async def kakao_skill_endpoint(request: Request) -> JSONResponse:
     try:
         body = await request.json()
 
-        # 사용자 발화 추출
+        # 사용자 발화 및 ID 추출
         user_request = body.get("userRequest", {})
         utterance = user_request.get("utterance", "")
+        user_id = get_user_id_from_request(body)
 
         if not utterance:
             return JSONResponse(create_kakao_response("메시지를 입력해주세요."))
 
         # 스킬 처리
-        response = await process_kakao_skill(utterance)
+        response = await process_kakao_skill(utterance, user_id)
         return JSONResponse(response)
 
     except Exception as e:

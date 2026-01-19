@@ -910,6 +910,47 @@ def create_kakao_cards_response(cards: list, quick_replies: list = None) -> dict
     return response
 
 
+def create_symptom_analysis_with_cards_response(
+    text: str, cards: list, quick_replies: list = None
+) -> dict:
+    """증상 분석 텍스트 + 병원 카드 캐러셀 응답 형식 생성"""
+    outputs = []
+
+    # 1. 증상 분석 텍스트
+    if len(text) > 1000:
+        text = text[:997] + "..."
+    outputs.append({"simpleText": {"text": text}})
+
+    # 2. 병원 카드 캐러셀
+    if cards:
+        carousel = {
+            "carousel": {
+                "type": "basicCard",
+                "items": cards[:10]
+            }
+        }
+        outputs.append(carousel)
+
+    response = {
+        "version": "2.0",
+        "template": {
+            "outputs": outputs
+        }
+    }
+
+    if quick_replies:
+        response["template"]["quickReplies"] = [
+            {
+                "label": qr.get("label", ""),
+                "action": "message",
+                "messageText": qr.get("message", qr.get("label", ""))
+            }
+            for qr in quick_replies[:10]
+        ]
+
+    return response
+
+
 def extract_intent(user_message: str) -> dict:
     """사용자 메시지에서 의도 추출 (확장된 자연어 인식)"""
     message = user_message.lower()
@@ -1550,33 +1591,94 @@ async def process_kakao_skill(user_message: str, user_id: str = "anonymous") -> 
                     hospitals = result.get("hospitals", [])
 
         if hospitals:
-            response_text += f"📍 {region} 주변 {departments[0]}\n\n"
-            for i, h in enumerate(hospitals[:3], 1):
-                name = h.get("name", "")
-                distance = h.get("distance", "")
-                dist_text = f" ({distance}m)" if distance else ""
-                response_text += f"{i}. {name}{dist_text}\n"
+            response_text += f"📍 {region} 주변 {departments[0]}"
 
-            response_text += "\n💡 병원명을 카카오맵에서 검색하면 상세정보를 볼 수 있어요."
+            # 병원 카드 생성 (카카오맵, 길찾기 링크 포함)
+            cards = []
+            for h in hospitals[:3]:
+                name = h.get("name", "")
+                if not name:
+                    continue
+
+                address = h.get("road_address") or h.get("address") or ""
+                phone = h.get("phone") or ""
+
+                description_parts = []
+                if address:
+                    description_parts.append(f"📍 {address}")
+                if phone:
+                    description_parts.append(f"📞 {phone}")
+                description = "\n".join(description_parts) if description_parts else "상세정보 없음"
+
+                coords = h.get("coordinates") or {}
+                x = coords.get("x")
+                y = coords.get("y")
+
+                map_url = h.get("kakao_map_url")
+                if not map_url and name and x and y:
+                    map_url = kakao_client.generate_map_url(name, x, y)
+
+                directions_url = None
+                if name and x and y:
+                    directions_url = kakao_client.generate_directions_url(
+                        dest_name=name,
+                        dest_x=x,
+                        dest_y=y,
+                        origin_x=location["x"],
+                        origin_y=location["y"],
+                    )
+
+                card = {
+                    "title": name,
+                    "description": description,
+                }
+
+                buttons = []
+                if map_url:
+                    buttons.append({
+                        "label": "카카오맵 보기",
+                        "action": "webLink",
+                        "webLinkUrl": map_url,
+                    })
+                if directions_url:
+                    buttons.append({
+                        "label": "길찾기",
+                        "action": "webLink",
+                        "webLinkUrl": directions_url,
+                    })
+                if buttons:
+                    card["buttons"] = buttons
+
+                cards.append(card)
+
+            # 빠른 응답
+            quick_replies = []
+            if departments:
+                quick_replies.append({
+                    "label": f"서울 {departments[0]} 찾기",
+                    "message": f"서울 {departments[0]} 찾아줘"
+                })
+
+            if cards:
+                # 텍스트 + 카드 캐러셀 응답
+                return create_symptom_analysis_with_cards_response(
+                    response_text, cards, quick_replies
+                )
+            else:
+                return create_kakao_response(response_text, quick_replies=quick_replies)
         else:
-            response_text += "💡 지역을 알려주시면 주변 병원을 찾아드릴게요.\n"
+            response_text += "\n\n💡 지역을 알려주시면 주변 병원을 찾아드릴게요.\n"
             response_text += "예: \"강남 피부과\", \"홍대 근처 정형외과\""
 
-        # 빠른 응답에 "왜?" 질문 옵션 추가
-        quick_replies = []
-        if departments and len(departments) >= 2:
-            # 두 번째 진료과에 대해 "왜?" 질문 유도 (의아할 수 있는 추천)
-            quick_replies.append({
-                "label": f"왜 {departments[1]}?",
-                "message": f"왜 {departments[1]}를 추천했어?"
-            })
-        if departments:
-            quick_replies.append({
-                "label": f"서울 {departments[0]} 찾기",
-                "message": f"서울 {departments[0]} 찾아줘"
-            })
+            # 빠른 응답
+            quick_replies = []
+            if departments:
+                quick_replies.append({
+                    "label": f"서울 {departments[0]} 찾기",
+                    "message": f"서울 {departments[0]} 찾아줘"
+                })
 
-        return create_kakao_response(response_text, quick_replies=quick_replies)
+            return create_kakao_response(response_text, quick_replies=quick_replies)
 
     # 병원 검색
     if intent == "search_hospital":

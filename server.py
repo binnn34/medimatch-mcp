@@ -675,6 +675,343 @@ async def search_specialist_with_kakao(
 # 헬스체크 엔드포인트 추가 (UptimeRobot 모니터링용)
 from starlette.requests import Request
 from starlette.responses import JSONResponse
+import re
+
+
+# ============================================
+# 카카오 i 오픈빌더 스킬 서버 엔드포인트
+# ============================================
+
+def create_kakao_response(text: str, buttons: list = None, quick_replies: list = None) -> dict:
+    """카카오 오픈빌더 응답 형식 생성"""
+    outputs = []
+
+    # 텍스트 응답 (최대 1000자)
+    if len(text) > 1000:
+        text = text[:997] + "..."
+
+    simple_text = {"simpleText": {"text": text}}
+    outputs.append(simple_text)
+
+    # 버튼이 있으면 추가
+    if buttons:
+        button_list = []
+        for btn in buttons[:3]:  # 최대 3개
+            button_list.append({
+                "label": btn.get("label", ""),
+                "action": btn.get("action", "message"),
+                "messageText": btn.get("message", btn.get("label", "")),
+            })
+        if button_list:
+            outputs.append({
+                "basicCard": {
+                    "description": "추가 기능",
+                    "buttons": button_list
+                }
+            })
+
+    response = {
+        "version": "2.0",
+        "template": {
+            "outputs": outputs
+        }
+    }
+
+    # 빠른 응답 추가
+    if quick_replies:
+        response["template"]["quickReplies"] = [
+            {
+                "label": qr.get("label", ""),
+                "action": "message",
+                "messageText": qr.get("message", qr.get("label", ""))
+            }
+            for qr in quick_replies[:10]  # 최대 10개
+        ]
+
+    return response
+
+
+def extract_intent(user_message: str) -> dict:
+    """사용자 메시지에서 의도 추출"""
+    message = user_message.lower()
+
+    # 인사
+    if any(word in message for word in ["안녕", "하이", "반가", "시작"]):
+        return {"intent": "greeting"}
+
+    # 도움말
+    if any(word in message for word in ["도움", "사용법", "뭐 할 수", "기능"]):
+        return {"intent": "help"}
+
+    # 병원 검색 (지역 + 과목)
+    hospital_keywords = ["병원", "의원", "클리닉", "찾아", "검색", "추천", "알려"]
+    region_pattern = r'(서울|부산|대구|인천|광주|대전|울산|세종|경기|강원|충북|충남|전북|전남|경북|경남|제주|강남|홍대|신촌|서면|해운대|동성로|판교|분당|첨단)'
+    dept_pattern = r'(내과|외과|피부과|정형외과|이비인후과|안과|치과|산부인과|소아과|신경과|정신과|비뇨기과|재활의학과)'
+
+    region_match = re.search(region_pattern, message)
+    dept_match = re.search(dept_pattern, message)
+
+    if any(word in message for word in hospital_keywords) or dept_match:
+        return {
+            "intent": "search_hospital",
+            "region": region_match.group(1) if region_match else None,
+            "department": dept_match.group(1) if dept_match else None,
+        }
+
+    # 증상 분석 (증상 관련 키워드)
+    symptom_keywords = ["아파", "아프", "통증", "가려", "붓", "열이", "기침", "콧물",
+                        "두통", "어지러", "구토", "설사", "변비", "불면", "피곤",
+                        "증상", "아픈", "쑤시", "저리", "뻣뻣", "따끔", "화끈"]
+
+    if any(word in message for word in symptom_keywords):
+        return {
+            "intent": "analyze_symptoms",
+            "symptoms": user_message,
+            "region": region_match.group(1) if region_match else None,
+        }
+
+    # 약국 검색
+    if "약국" in message:
+        return {
+            "intent": "search_pharmacy",
+            "region": region_match.group(1) if region_match else None,
+        }
+
+    # 기본: 증상 분석으로 처리
+    return {
+        "intent": "analyze_symptoms",
+        "symptoms": user_message,
+        "region": region_match.group(1) if region_match else None,
+    }
+
+
+async def process_kakao_skill(user_message: str) -> dict:
+    """카카오 스킬 요청 처리"""
+    intent_data = extract_intent(user_message)
+    intent = intent_data.get("intent")
+
+    # 인사
+    if intent == "greeting":
+        return create_kakao_response(
+            "안녕하세요! 🏥 MediMatch입니다.\n\n"
+            "증상을 말씀해주시면 의심 질병과 추천 진료과를 알려드리고, "
+            "주변 병원도 찾아드려요.\n\n"
+            "예시:\n"
+            "• \"머리가 아프고 어지러워요\"\n"
+            "• \"강남 피부과 찾아줘\"\n"
+            "• \"배가 아프고 설사해요\"",
+            quick_replies=[
+                {"label": "증상 분석하기", "message": "증상 분석해줘"},
+                {"label": "사용법 보기", "message": "도움말"},
+            ]
+        )
+
+    # 도움말
+    if intent == "help":
+        return create_kakao_response(
+            "📋 MediMatch 사용법\n\n"
+            "1️⃣ 증상 말하기\n"
+            "\"머리가 아파요\", \"피부가 가려워요\"\n\n"
+            "2️⃣ 병원 찾기\n"
+            "\"강남 피부과\", \"홍대 근처 정형외과\"\n\n"
+            "3️⃣ 병원+약국 찾기\n"
+            "\"서면 내과랑 약국\"\n\n"
+            "증상을 자세히 설명할수록 더 정확한 분석이 가능해요!",
+            quick_replies=[
+                {"label": "증상 말하기", "message": "배가 아파요"},
+                {"label": "병원 찾기", "message": "강남 피부과 찾아줘"},
+            ]
+        )
+
+    # 증상 분석 + 병원 추천
+    if intent == "analyze_symptoms":
+        symptoms = intent_data.get("symptoms", user_message)
+        region = intent_data.get("region")
+
+        # 증상 분석
+        diagnosis = symptom_analyzer.diagnose_disease(symptoms)
+        analysis = symptom_analyzer.analyze_symptoms(symptoms)
+
+        # 응답 텍스트 구성
+        response_text = ""
+
+        # 질병 진단 결과
+        if diagnosis["has_diagnosis"]:
+            diseases = diagnosis["suspected_diseases"][:3]
+            response_text += f"🔍 증상 분석 결과\n\n"
+            response_text += f"의심 질병: {', '.join(diseases)}\n"
+            response_text += f"심각도: {diagnosis['severity']}\n\n"
+
+        # 추천 진료과
+        departments = diagnosis["recommended_departments"] if diagnosis["has_diagnosis"] else analysis["recommended_departments"]
+        if departments:
+            response_text += f"🏥 추천 진료과: {', '.join(departments[:2])}\n\n"
+
+        # 지역이 있으면 병원 검색
+        hospitals = []
+        if region and departments:
+            primary_dept = departments[0]
+            location = await kakao_client.get_coordinates_from_place(region)
+
+            if location["success"]:
+                result = await kakao_client.get_nearby_hospitals(
+                    x=location["x"],
+                    y=location["y"],
+                    radius=5000,
+                    department=primary_dept,
+                    size=3,
+                )
+                if result["success"]:
+                    hospitals = result.get("hospitals", [])
+
+        if hospitals:
+            response_text += f"📍 {region} 주변 {departments[0]}\n\n"
+            for i, h in enumerate(hospitals[:3], 1):
+                name = h.get("name", "")
+                distance = h.get("distance", "")
+                dist_text = f" ({distance}m)" if distance else ""
+                response_text += f"{i}. {name}{dist_text}\n"
+
+            response_text += "\n💡 병원명을 카카오맵에서 검색하면 상세정보를 볼 수 있어요."
+        else:
+            response_text += "💡 지역을 알려주시면 주변 병원을 찾아드릴게요.\n"
+            response_text += "예: \"강남 피부과\", \"홍대 근처 정형외과\""
+
+        quick_replies = []
+        if departments:
+            for dept in departments[:2]:
+                quick_replies.append({
+                    "label": f"서울 {dept} 찾기",
+                    "message": f"서울 {dept} 찾아줘"
+                })
+
+        return create_kakao_response(response_text, quick_replies=quick_replies)
+
+    # 병원 검색
+    if intent == "search_hospital":
+        region = intent_data.get("region", "서울")
+        department = intent_data.get("department")
+
+        if not department:
+            return create_kakao_response(
+                f"어떤 진료과를 찾으시나요?\n\n"
+                f"예: \"{region} 피부과\", \"{region} 정형외과\"",
+                quick_replies=[
+                    {"label": "내과", "message": f"{region} 내과 찾아줘"},
+                    {"label": "피부과", "message": f"{region} 피부과 찾아줘"},
+                    {"label": "정형외과", "message": f"{region} 정형외과 찾아줘"},
+                ]
+            )
+
+        # 병원 검색
+        location = await kakao_client.get_coordinates_from_place(region)
+
+        if not location["success"]:
+            return create_kakao_response(
+                f"'{region}'의 위치를 찾을 수 없어요.\n"
+                "더 구체적인 지역명을 입력해주세요.\n\n"
+                "예: 강남역, 홍대입구, 부산 서면"
+            )
+
+        result = await kakao_client.get_nearby_hospitals(
+            x=location["x"],
+            y=location["y"],
+            radius=5000,
+            department=department,
+            size=5,
+        )
+
+        if result["success"] and result.get("hospitals"):
+            hospitals = result["hospitals"]
+            response_text = f"📍 {region} 주변 {department}\n\n"
+
+            for i, h in enumerate(hospitals[:5], 1):
+                name = h.get("name", "")
+                distance = h.get("distance", "")
+                phone = h.get("phone", "")
+                dist_text = f" ({distance}m)" if distance else ""
+                phone_text = f"\n   📞 {phone}" if phone else ""
+                response_text += f"{i}. {name}{dist_text}{phone_text}\n\n"
+
+            response_text += "💡 병원명을 카카오맵에서 검색하면\n상세정보와 길찾기가 가능해요."
+
+            return create_kakao_response(response_text)
+        else:
+            return create_kakao_response(
+                f"{region} 주변에서 {department}를 찾지 못했어요.\n"
+                "검색 범위를 넓혀서 다시 찾아볼까요?",
+                quick_replies=[
+                    {"label": "범위 넓혀 검색", "message": f"서울 {department} 찾아줘"},
+                ]
+            )
+
+    # 약국 검색
+    if intent == "search_pharmacy":
+        region = intent_data.get("region", "서울")
+
+        location = await kakao_client.get_coordinates_from_place(region)
+
+        if location["success"]:
+            result = await kakao_client.get_nearby_pharmacies(
+                x=location["x"],
+                y=location["y"],
+                radius=3000,
+            )
+
+            if result["success"] and result.get("pharmacies"):
+                pharmacies = result["pharmacies"]
+                response_text = f"💊 {region} 주변 약국\n\n"
+
+                for i, p in enumerate(pharmacies[:5], 1):
+                    name = p.get("name", "")
+                    distance = p.get("distance", "")
+                    dist_text = f" ({distance}m)" if distance else ""
+                    response_text += f"{i}. {name}{dist_text}\n"
+
+                return create_kakao_response(response_text)
+
+        return create_kakao_response(f"{region} 주변에서 약국을 찾지 못했어요.")
+
+    # 기본 응답
+    return create_kakao_response(
+        "죄송해요, 잘 이해하지 못했어요.\n\n"
+        "증상을 말씀해주시거나, 찾으시는 병원 종류를 알려주세요.\n\n"
+        "예시:\n"
+        "• \"머리가 아프고 어지러워요\"\n"
+        "• \"강남 피부과 찾아줘\"",
+        quick_replies=[
+            {"label": "사용법 보기", "message": "도움말"},
+        ]
+    )
+
+
+@mcp.custom_route("/kakao/skill", methods=["POST"])
+async def kakao_skill_endpoint(request: Request) -> JSONResponse:
+    """
+    카카오 i 오픈빌더 스킬 서버 엔드포인트
+
+    오픈빌더에서 스킬 서버로 등록하여 사용합니다.
+    URL: https://medimatch-mcp.onrender.com/kakao/skill
+    """
+    try:
+        body = await request.json()
+
+        # 사용자 발화 추출
+        user_request = body.get("userRequest", {})
+        utterance = user_request.get("utterance", "")
+
+        if not utterance:
+            return JSONResponse(create_kakao_response("메시지를 입력해주세요."))
+
+        # 스킬 처리
+        response = await process_kakao_skill(utterance)
+        return JSONResponse(response)
+
+    except Exception as e:
+        error_response = create_kakao_response(
+            "죄송해요, 오류가 발생했어요.\n잠시 후 다시 시도해주세요."
+        )
+        return JSONResponse(error_response)
 
 
 @mcp.custom_route("/health", methods=["GET"])

@@ -7,7 +7,37 @@ from .config import (
     DISEASE_KEYWORDS,
     SYMPTOM_TO_DISEASE,
     SINGLE_SYMPTOM_TO_DISEASE,
+    DISEASE_TO_SPECIALTY_KEYWORDS,
+    SYMPTOM_TO_SPECIALTY,
 )
+
+# 응급 증상 키워드 (119 안내 필요)
+EMERGENCY_SYMPTOMS = {
+    # 뇌졸중 증상 (FAST)
+    "뇌졸중": ["얼굴마비", "안면마비", "반신마비", "팔다리마비", "마비", "말어눌", "어눌", "발음이상", "언어장애", "갑자기쓰러", "의식잃"],
+    # 심근경색/심장마비 증상
+    "심근경색": ["가슴통증", "흉통", "가슴압박", "가슴아", "왼팔통증", "왼팔저", "턱통증", "식은땀", "호흡곤란", "숨못쉬"],
+    # 중증 출혈
+    "출혈": ["대량출혈", "피가멈추지않", "피가안멈", "피흘리"],
+    # 호흡 응급
+    "호흡곤란": ["숨못쉬", "호흡정지", "질식", "숨이안쉬", "기도막힘", "호흡곤란"],
+    # 의식 이상
+    "의식장애": ["의식없", "의식잃", "정신잃", "기절", "쓰러져서안일어", "혼수"],
+    # 중독
+    "중독": ["독극물", "약물과다", "가스중독", "일산화탄소"],
+    # 심한 알레르기
+    "아나필락시스": ["온몸부어", "목부어", "호흡곤란알러지", "아나필락시스"],
+    # 경련
+    "경련": ["경련", "발작", "전신경련", "간질발작"],
+}
+
+# 응급 상황 안내 메시지
+EMERGENCY_GUIDANCE = {
+    "immediate_action": "🚨 응급 상황으로 판단됩니다! 즉시 119에 전화하세요.",
+    "call_119": "📞 119 (소방서/응급의료)",
+    "while_waiting": "구급대 도착 전: 환자를 안정시키고, 의식과 호흡을 확인하세요.",
+    "do_not_move": "무리하게 환자를 움직이지 마세요 (단, 위험한 장소에서는 안전한 곳으로 이동).",
+}
 
 
 class SymptomAnalyzer:
@@ -18,8 +48,47 @@ class SymptomAnalyzer:
         self.disease_keywords = DISEASE_KEYWORDS
         self.symptom_to_disease = SYMPTOM_TO_DISEASE
         self.single_symptom_to_disease = SINGLE_SYMPTOM_TO_DISEASE
+        self.emergency_symptoms = EMERGENCY_SYMPTOMS
         # 불용어 (매칭에서 제외할 단어들)
         self.stopwords = {'이', '가', '을', '를', '은', '는', '에', '의', '로', '으로', '와', '과', '도', '만', '좀', '너무', '많이', '조금', '약간', '계속', '자꾸', '요즘', '오늘', '어제', '최근'}
+
+    def check_emergency(self, user_input: str) -> Dict:
+        """
+        응급 증상 여부를 확인합니다.
+
+        Args:
+            user_input: 사용자가 입력한 증상 설명
+
+        Returns:
+            응급 상황 정보 딕셔너리
+        """
+        normalized_input = self._normalize_text(user_input)
+        detected_emergencies = []
+
+        for emergency_type, keywords in self.emergency_symptoms.items():
+            for keyword in keywords:
+                keyword_normalized = self._normalize_text(keyword)
+                if keyword_normalized in normalized_input:
+                    detected_emergencies.append({
+                        "type": emergency_type,
+                        "matched_keyword": keyword,
+                    })
+                    break  # 같은 카테고리 중복 방지
+
+        if detected_emergencies:
+            return {
+                "is_emergency": True,
+                "detected_emergencies": detected_emergencies,
+                "guidance": EMERGENCY_GUIDANCE,
+                "message": f"⚠️ '{', '.join([e['type'] for e in detected_emergencies])}' 관련 응급 증상이 감지되었습니다!",
+            }
+
+        return {
+            "is_emergency": False,
+            "detected_emergencies": [],
+            "guidance": None,
+            "message": None,
+        }
 
     def _normalize_text(self, text: str) -> str:
         """텍스트 정규화: 공백 제거, 소문자화, 특수문자 제거"""
@@ -314,6 +383,145 @@ class SymptomAnalyzer:
     def is_valid_department(self, department: str) -> bool:
         """유효한 진료과목인지 확인"""
         return department in DEPARTMENT_CODES
+
+    def extract_specialty(self, user_input: str) -> Optional[Dict]:
+        """
+        사용자 입력에서 전문 분야를 추출합니다.
+
+        Args:
+            user_input: 사용자가 입력한 증상/질환 설명
+
+        Returns:
+            전문 분야 정보 딕셔너리 또는 None
+        """
+        normalized_input = self._normalize_text(user_input)
+
+        # 전문 분야 키워드 매칭 - 정확한 포함 매칭만 사용
+        matched_specialty = None
+        match_score = 0
+
+        for keyword, specialty_name in SYMPTOM_TO_SPECIALTY.items():
+            keyword_normalized = self._normalize_text(keyword)
+
+            # 정확한 포함 매칭만 사용 (부분 매칭 제거하여 오매칭 방지)
+            # 예: "아래" → "어깨" 오매칭 방지
+            if keyword_normalized in normalized_input:
+                # 더 긴 키워드에 높은 우선순위 부여
+                if len(keyword_normalized) > match_score:
+                    match_score = len(keyword_normalized)
+                    matched_specialty = specialty_name
+
+        if matched_specialty and matched_specialty in DISEASE_TO_SPECIALTY_KEYWORDS:
+            specialty_info = DISEASE_TO_SPECIALTY_KEYWORDS[matched_specialty]
+            return {
+                "specialty_name": matched_specialty,
+                "department": specialty_info["department"],
+                "specialty_keywords": specialty_info["specialty_keywords"],
+                "search_terms": specialty_info["search_terms"],
+                "priority_keywords": specialty_info["priority_keywords"],
+            }
+
+        return None
+
+    def get_specialty_search_keywords(self, user_input: str, department: str) -> Dict:
+        """
+        병원 검색을 위한 전문 분야 키워드를 반환합니다.
+
+        Args:
+            user_input: 사용자 입력
+            department: 추천된 진료과목
+
+        Returns:
+            검색 키워드 정보
+        """
+        # 전문 분야 추출
+        specialty_info = self.extract_specialty(user_input)
+
+        if specialty_info:
+            # 전문 분야가 매칭된 경우
+            return {
+                "has_specialty": True,
+                "specialty_name": specialty_info["specialty_name"],
+                "department": specialty_info["department"],
+                "primary_search_term": specialty_info["search_terms"][0] if specialty_info["search_terms"] else f"{department}",
+                "specialty_keywords": specialty_info["specialty_keywords"],
+                "priority_keywords": specialty_info["priority_keywords"],
+                "all_search_terms": specialty_info["search_terms"],
+            }
+        else:
+            # 전문 분야 매칭 없음 - 일반 진료과목으로 검색
+            return {
+                "has_specialty": False,
+                "specialty_name": None,
+                "department": department,
+                "primary_search_term": department,
+                "specialty_keywords": [],
+                "priority_keywords": [],
+                "all_search_terms": [department],
+            }
+
+    def rank_hospitals_by_specialty(
+        self,
+        hospitals: List[Dict],
+        specialty_info: Dict
+    ) -> List[Dict]:
+        """
+        전문 분야 키워드를 기반으로 병원을 우선순위로 정렬합니다.
+
+        Args:
+            hospitals: 병원 목록
+            specialty_info: get_specialty_search_keywords의 반환값
+
+        Returns:
+            우선순위로 정렬된 병원 목록
+        """
+        if not specialty_info.get("has_specialty") or not hospitals:
+            return hospitals
+
+        priority_keywords = specialty_info.get("priority_keywords", [])
+        specialty_keywords = specialty_info.get("specialty_keywords", [])
+
+        def calculate_score(hospital: Dict) -> int:
+            """병원의 전문 분야 매칭 점수 계산"""
+            score = 0
+            hospital_name = hospital.get("name", "").lower()
+            hospital_category = hospital.get("category_name", "").lower() if hospital.get("category_name") else ""
+
+            combined_text = f"{hospital_name} {hospital_category}"
+
+            # priority_keywords 매칭 (높은 점수)
+            for keyword in priority_keywords:
+                if keyword.lower() in combined_text:
+                    score += 100
+
+            # specialty_keywords 매칭 (중간 점수)
+            for keyword in specialty_keywords:
+                if keyword.lower() in combined_text:
+                    score += 50
+
+            # 전문/클리닉 키워드가 있으면 추가 점수
+            if "전문" in combined_text:
+                score += 30
+            if "클리닉" in combined_text:
+                score += 20
+            if "센터" in combined_text:
+                score += 20
+
+            return score
+
+        # 점수 계산 및 정렬
+        scored_hospitals = []
+        for hospital in hospitals:
+            score = calculate_score(hospital)
+            hospital_copy = hospital.copy()
+            hospital_copy["_specialty_score"] = score
+            hospital_copy["_is_specialty_match"] = score > 0
+            scored_hospitals.append(hospital_copy)
+
+        # 점수 기준 내림차순 정렬
+        scored_hospitals.sort(key=lambda h: h["_specialty_score"], reverse=True)
+
+        return scored_hospitals
 
 
 # 싱글톤 인스턴스

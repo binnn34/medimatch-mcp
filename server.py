@@ -893,6 +893,202 @@ SYMPTOM_DEPARTMENT_EXPLANATIONS = {
 }
 
 
+# ============================================
+# 질병 정보 데이터베이스 (질병 확인 질문 대응용)
+# ============================================
+DISEASE_INFO_DATABASE = {
+    # 비뇨기계 질환
+    "방광염": {
+        "description": "방광에 세균이 감염되어 염증이 생기는 질환이에요.",
+        "symptoms": ["소변볼때 통증/따가움", "빈뇨 (자주 마려움)", "잔뇨감", "아랫배 불편감", "탁한 소변", "혈뇨"],
+        "department": "비뇨의학과",
+        "related_diseases": ["요로감염", "신우신염", "요도염"],
+        "differentiator": "방광염은 주로 소변볼 때 통증과 빈뇨가 특징이에요. 아랫배 통증만 있다면 다른 원인일 수 있어요.",
+        "when_to_suspect": "소변볼 때 따갑거나 아프고, 자주 마렵고, 소변 본 후에도 시원하지 않으면 방광염을 의심해볼 수 있어요.",
+    },
+    "요로감염": {
+        "description": "요로(신장-요관-방광-요도)에 세균이 감염된 상태예요.",
+        "symptoms": ["소변볼때 통증", "빈뇨", "발열", "허리/옆구리 통증", "오한"],
+        "department": "비뇨의학과",
+        "related_diseases": ["방광염", "신우신염", "요도염"],
+        "differentiator": "열이 나거나 허리/옆구리까지 아프면 신장까지 감염됐을 수 있어 빨리 병원에 가야 해요.",
+        "when_to_suspect": "소변 증상과 함께 열이 나거나 허리가 아프면 요로감염을 의심해야 해요.",
+    },
+    "신장결석": {
+        "description": "신장에 돌이 생겨 요로를 막거나 자극하는 질환이에요.",
+        "symptoms": ["심한 옆구리/허리 통증", "혈뇨", "구역질/구토", "소변볼때 통증"],
+        "department": "비뇨의학과",
+        "related_diseases": ["요로결석", "요관결석"],
+        "differentiator": "갑자기 심한 옆구리 통증이 오고, 통증이 아래로 이동하면 결석을 의심해요.",
+        "when_to_suspect": "갑자기 한쪽 옆구리나 허리가 심하게 아프고 소변에 피가 비치면 결석일 수 있어요.",
+    },
+
+    # 소화기계 질환
+    "위염": {
+        "description": "위 점막에 염증이 생긴 상태예요.",
+        "symptoms": ["속쓰림", "명치 통증", "더부룩함", "구역질", "식욕 감소"],
+        "department": "내과",
+        "related_diseases": ["위궤양", "역류성식도염", "기능성소화불량"],
+        "differentiator": "식사와 관련된 명치 통증이 특징이에요. 아랫배가 아프면 장 문제일 가능성이 높아요.",
+        "when_to_suspect": "식사 후 속이 쓰리거나 명치가 아프면 위염을 의심할 수 있어요.",
+    },
+    "장염": {
+        "description": "장에 염증이 생긴 상태로, 세균/바이러스 감염이 흔한 원인이에요.",
+        "symptoms": ["설사", "복통", "발열", "구토", "탈수"],
+        "department": "내과",
+        "related_diseases": ["식중독", "과민성대장증후군", "염증성장질환"],
+        "differentiator": "설사와 함께 복통이 있고 열이 나면 감염성 장염일 가능성이 높아요.",
+        "when_to_suspect": "설사가 심하고 배가 아프면 장염을 의심해요. 고열이 동반되면 빨리 병원에 가세요.",
+    },
+    "역류성식도염": {
+        "description": "위산이 식도로 역류해서 식도에 염증이 생기는 질환이에요.",
+        "symptoms": ["가슴쓰림", "신물 올라옴", "목이물감", "마른기침", "쉰목소리"],
+        "department": "내과",
+        "related_diseases": ["위염", "위궤양", "식도암"],
+        "differentiator": "눕거나 식후에 가슴이 쓰리고 신물이 올라오면 역류성식도염을 의심해요.",
+        "when_to_suspect": "식후에 눕거나 구부리면 속이 쓰리고 신물이 올라오면 역류성식도염일 수 있어요.",
+    },
+    "과민성대장증후군": {
+        "description": "장에 기능적 문제가 있어 복통, 설사, 변비가 반복되는 질환이에요.",
+        "symptoms": ["복통", "설사/변비 반복", "복부 팽만감", "배변 후 호전"],
+        "department": "내과",
+        "related_diseases": ["장염", "염증성장질환", "대장암"],
+        "differentiator": "검사상 이상이 없는데 배가 아프고 배변 습관이 불규칙하면 과민성대장증후군일 수 있어요.",
+        "when_to_suspect": "스트레스받으면 배가 아프고 설사/변비가 번갈아 나타나면 과민성대장증후군을 의심해요.",
+    },
+
+    # 여성 질환
+    "골반염": {
+        "description": "자궁, 난관, 난소 등 여성 생식기에 염증이 생긴 상태예요.",
+        "symptoms": ["아랫배 통증", "발열", "질분비물 증가", "성교통", "생리불순"],
+        "department": "산부인과",
+        "related_diseases": ["자궁내막염", "난소염", "난관염"],
+        "differentiator": "여성이고 아랫배가 아프면서 열이 나거나 분비물이 늘었다면 골반염을 의심해요.",
+        "when_to_suspect": "아랫배가 아프고 열이 나면서 냉이 늘었다면 골반염일 수 있어요.",
+    },
+    "난소낭종": {
+        "description": "난소에 물혹이 생긴 상태예요. 대부분 양성이에요.",
+        "symptoms": ["아랫배 한쪽 통증", "복부 팽만감", "생리불순", "배뇨장애"],
+        "department": "산부인과",
+        "related_diseases": ["자궁근종", "자궁내막증", "난소암"],
+        "differentiator": "아랫배 한쪽이 묵직하거나 생리 주기와 관계없이 불편하면 난소낭종을 의심해요.",
+        "when_to_suspect": "아랫배 한쪽이 묵직하고 생리가 불규칙하면 난소낭종일 수 있어요.",
+    },
+    "자궁내막증": {
+        "description": "자궁내막 조직이 자궁 밖에서 자라는 질환이에요.",
+        "symptoms": ["심한 생리통", "만성 골반통", "성교통", "불임"],
+        "department": "산부인과",
+        "related_diseases": ["자궁근종", "골반염", "난소낭종"],
+        "differentiator": "생리통이 점점 심해지고 진통제가 잘 안 듣는다면 자궁내막증을 의심해요.",
+        "when_to_suspect": "생리할 때마다 통증이 심하고 점점 악화된다면 자궁내막증일 수 있어요.",
+    },
+    "질염": {
+        "description": "질에 염증이 생긴 상태로, 세균/곰팡이/기생충 등이 원인이에요.",
+        "symptoms": ["질분비물 변화", "가려움", "냄새", "따가움"],
+        "department": "산부인과",
+        "related_diseases": ["칸디다질염", "세균성질염", "트리코모나스질염"],
+        "differentiator": "냉의 양, 색, 냄새가 평소와 다르고 가렵다면 질염을 의심해요.",
+        "when_to_suspect": "냉이 늘었거나 색이 변하고 가렵다면 질염일 수 있어요.",
+    },
+
+    # 피부 질환
+    "아토피": {
+        "description": "만성 재발성 피부 질환으로 가려움과 습진이 특징이에요.",
+        "symptoms": ["심한 가려움", "건조한 피부", "습진", "피부가 두꺼워짐"],
+        "department": "피부과",
+        "related_diseases": ["습진", "접촉성피부염", "건선"],
+        "differentiator": "어릴 때부터 가렵고 팔꿈치/무릎 안쪽에 습진이 있다면 아토피일 수 있어요.",
+        "when_to_suspect": "피부가 건조하고 특정 부위가 반복해서 가렵고 긁으면 더 악화된다면 아토피를 의심해요.",
+    },
+    "두드러기": {
+        "description": "피부에 붉은 발진이 부풀어 오르고 가려운 질환이에요.",
+        "symptoms": ["붉은 발진", "가려움", "피부 부종", "발진이 이동함"],
+        "department": "피부과",
+        "related_diseases": ["알레르기", "음식알레르기", "약물알레르기"],
+        "differentiator": "갑자기 붉은 반점이 생기고 가렵다가 몇 시간 후 사라지면 두드러기예요.",
+        "when_to_suspect": "갑자기 피부가 부풀어 오르고 가렵다가 사라지기를 반복하면 두드러기를 의심해요.",
+    },
+    "대상포진": {
+        "description": "수두 바이러스가 재활성화되어 신경을 따라 물집이 생기는 질환이에요.",
+        "symptoms": ["한쪽 띠 모양 발진", "심한 통증", "물집", "감각이상"],
+        "department": "피부과",
+        "related_diseases": ["수두", "단순포진", "대상포진후신경통"],
+        "differentiator": "몸 한쪽에 띠처럼 물집이 생기고 심하게 아프면 대상포진이에요. 빨리 치료해야 해요!",
+        "when_to_suspect": "몸 한쪽이 화끈거리고 아프다가 물집이 생기면 대상포진일 수 있어요.",
+    },
+
+    # 근골격계 질환
+    "허리디스크": {
+        "description": "척추 사이의 디스크가 튀어나와 신경을 누르는 질환이에요.",
+        "symptoms": ["허리 통증", "다리 저림", "다리 방사통", "허리 뻣뻣함"],
+        "department": "정형외과",
+        "related_diseases": ["척추관협착증", "근막통증증후군", "좌골신경통"],
+        "differentiator": "허리가 아프면서 다리까지 저리거나 당기면 디스크를 의심해요.",
+        "when_to_suspect": "허리가 아프고 엉덩이나 다리로 통증이 뻗치면 디스크일 수 있어요.",
+    },
+    "관절염": {
+        "description": "관절에 염증이 생겨 통증과 붓기가 나타나는 질환이에요.",
+        "symptoms": ["관절 통증", "관절 붓기", "관절 뻣뻣함", "운동 시 소리"],
+        "department": "정형외과",
+        "related_diseases": ["퇴행성관절염", "류마티스관절염", "통풍"],
+        "differentiator": "관절이 붓고 아프면 관절염이에요. 아침에 뻣뻣하면 류마티스일 수 있어요.",
+        "when_to_suspect": "관절이 붓고 움직일 때 아프면 관절염을 의심해요.",
+    },
+
+    # 호흡기 질환
+    "비염": {
+        "description": "코 점막에 염증이 생겨 콧물, 코막힘, 재채기가 나타나는 질환이에요.",
+        "symptoms": ["콧물", "코막힘", "재채기", "코 가려움"],
+        "department": "이비인후과",
+        "related_diseases": ["알레르기비염", "축농증", "감기"],
+        "differentiator": "감기 없이 콧물/코막힘/재채기가 계속되면 비염이에요.",
+        "when_to_suspect": "아침에 일어나면 재채기가 나고 맑은 콧물이 계속 나온다면 비염을 의심해요.",
+    },
+    "축농증": {
+        "description": "부비동(코 주변 빈 공간)에 염증이 생겨 고름이 차는 질환이에요.",
+        "symptoms": ["누런 콧물", "코막힘", "안면 통증", "두통", "후비루"],
+        "department": "이비인후과",
+        "related_diseases": ["비염", "감기", "알레르기"],
+        "differentiator": "누런 콧물이 나오고 얼굴이 아프면 축농증을 의심해요.",
+        "when_to_suspect": "감기가 오래가고 누런 콧물에 얼굴이 아프면 축농증일 수 있어요.",
+    },
+    "천식": {
+        "description": "기관지가 좁아져 호흡이 어렵고 쌕쌕거리는 소리가 나는 질환이에요.",
+        "symptoms": ["기침", "쌕쌕거림", "호흡곤란", "가슴 답답함"],
+        "department": "내과",
+        "related_diseases": ["알레르기", "만성기관지염", "COPD"],
+        "differentiator": "숨쉴 때 쌕쌕 소리가 나고 답답하면 천식을 의심해요.",
+        "when_to_suspect": "운동하거나 찬 공기를 마시면 기침이 나고 숨이 차면 천식일 수 있어요.",
+    },
+
+    # 기타 흔한 질환
+    "이명": {
+        "description": "실제 소리가 없는데 귀에서 소리가 들리는 증상이에요.",
+        "symptoms": ["귀에서 소리", "난청", "어지러움"],
+        "department": "이비인후과",
+        "related_diseases": ["메니에르병", "난청", "청신경종양"],
+        "differentiator": "조용한 곳에서 귀에서 삐- 소리가 계속 나면 이명이에요.",
+        "when_to_suspect": "귀에서 삐 소리나 윙윙 소리가 계속 들리면 이명을 의심해요.",
+    },
+    "어지럼증": {
+        "description": "균형감각이 흐트러져 빙글빙글 도는 느낌이 드는 증상이에요.",
+        "symptoms": ["빙글빙글 도는 느낌", "균형 잡기 어려움", "구역질"],
+        "department": "이비인후과",
+        "related_diseases": ["이석증", "메니에르병", "전정신경염", "뇌혈관질환"],
+        "differentiator": "주변이 빙글빙글 돌면 귀 문제, 휘청하면 뇌/심장 문제일 수 있어요.",
+        "when_to_suspect": "갑자기 빙글빙글 도는 느낌이 나면 어지럼증이에요. 귀 문제가 흔해요.",
+    },
+    "편두통": {
+        "description": "한쪽 머리가 욱신욱신 아픈 두통이에요.",
+        "symptoms": ["한쪽 두통", "욱신거림", "구역질", "빛/소리 과민"],
+        "department": "신경과",
+        "related_diseases": ["긴장성두통", "군발성두통", "약물과용두통"],
+        "differentiator": "한쪽 머리가 박동성으로 아프고 빛/소리에 예민해지면 편두통이에요.",
+        "when_to_suspect": "한쪽 머리가 욱신거리며 아프고 구역질이 나면 편두통을 의심해요.",
+    },
+}
+
+
 def get_department_reason(symptom_area: str, department: str) -> str:
     """특정 증상에 대해 해당 진료과목을 추천하는 이유 반환"""
     # 정확한 매칭 시도
@@ -1130,7 +1326,88 @@ def extract_intent(user_message: str) -> dict:
         return {"intent": "help"}
 
     # ============================================
-    # 3. 다른 병원 추천 요청
+    # 3-1. 질병 확인/반문 질문 (방광염은 아니야? 등) - 새로 추가
+    # ============================================
+    # 질병명 패턴 (DISEASE_INFO_DATABASE의 키와 추가 질병명)
+    disease_names_for_question = [
+        # 비뇨기계
+        "방광염", "요로감염", "신장결석", "요로결석", "전립선염", "전립선비대",
+        # 소화기계
+        "위염", "장염", "역류성식도염", "과민성대장증후군", "위궤양", "십이지장궤양",
+        "담석", "담낭염", "췌장염", "간염", "지방간", "변비", "치질",
+        # 여성 질환
+        "골반염", "난소낭종", "자궁내막증", "질염", "자궁근종", "생리통",
+        # 피부 질환
+        "아토피", "두드러기", "대상포진", "습진", "건선", "여드름", "무좀",
+        # 근골격계
+        "허리디스크", "목디스크", "관절염", "류마티스", "오십견", "척추관협착증", "통풍",
+        # 호흡기
+        "비염", "축농증", "천식", "기관지염", "폐렴",
+        # 이비인후과
+        "이명", "어지럼증", "이석증", "메니에르", "중이염", "편도염",
+        # 신경/정신
+        "편두통", "두통", "불면증", "우울증", "공황장애", "불안장애",
+        # 순환기
+        "고혈압", "저혈압", "부정맥",
+        # 대사
+        "당뇨", "당뇨병", "갑상선", "고지혈증",
+        # 기타
+        "감기", "독감", "알레르기", "탈장", "맹장염", "결막염",
+    ]
+
+    # 질병 확인 질문 패턴
+    # "방광염은 아니야?", "혹시 방광염?", "방광염일수도?", "방광염 아닌가?", "그럼 방광염은?"
+    disease_question_patterns = [
+        # "~은/는 아니야/아닌가?" 패턴
+        r'({})[\s은는이가]*(아니|아닐|아닌가|아냐|아녀|아뇨)'.format("|".join(disease_names_for_question)),
+        # "혹시 ~?" 패턴
+        r'혹시\s*({})'.format("|".join(disease_names_for_question)),
+        # "~일수도/일까/인가?" 패턴
+        r'({})[\s]*(일수도|일까|인가|인거|인건|일까요|일수|일지도|아닐까)'.format("|".join(disease_names_for_question)),
+        # "그럼/그러면 ~은/는?" 패턴
+        r'(그럼|그러면|그래서)\s*({})'.format("|".join(disease_names_for_question)),
+        # "~ 아니야?/아닌가요?" (공백 포함)
+        r'({})[\s]+(아니야|아닌가요|아닌가|아냐|아녀)'.format("|".join(disease_names_for_question)),
+    ]
+
+    # 질병명 직접 확인 (짧은 질문)
+    # "방광염?", "방광염은?", "방광염 아니야?"
+    for disease in disease_names_for_question:
+        # 질병명이 메시지에 있고 + 질문/확인 맥락인 경우
+        if disease in message:
+            # 질문 패턴 확인
+            question_indicators = [
+                "아니", "아냐", "아녀", "인가", "일까", "혹시", "그럼", "그러면",
+                "?", "맞아", "맞나", "맞는", "같아", "같은데", "수도", "일지도",
+                "은?", "는?", "이야?", "예요?", "인가요", "일까요", "아닌가",
+                "아닐까", "일수", "아닐", "인거야", "인건가", "일 수도"
+            ]
+            has_question = any(q in message for q in question_indicators)
+
+            # 짧은 질문 (질병명 + 물음표 등) 또는 명확한 질문 패턴
+            is_short_question = len(message) < 25 and ("?" in message or has_question)
+            has_pattern = any(re.search(p, message) for p in disease_question_patterns)
+
+            if is_short_question or has_pattern:
+                return {
+                    "intent": "ask_disease_info",
+                    "disease_name": disease,
+                    "question_type": "confirmation"  # 확인 질문
+                }
+
+    # ============================================
+    # 3-2. 다른 진료과 추천 요청
+    # ============================================
+    other_dept_keywords = [
+        "다른 과", "다른과", "다른 진료과", "다른진료과",
+        "다른 데 가", "딴 데", "딴데", "다른 병원과",
+        "다른 선택", "다른 옵션", "대안", "차선책",
+    ]
+    if any(word in message for word in other_dept_keywords):
+        return {"intent": "suggest_other_departments"}
+
+    # ============================================
+    # 4. 다른 병원 추천 요청
     # ============================================
     more_hospital_keywords = [
         # 다른 병원 요청
@@ -1412,6 +1689,146 @@ async def process_kakao_skill(user_message: str, user_id: str = "anonymous") -> 
             "last_updated": 0,
             "last_recommendation": None,
         }
+
+    # ============================================
+    # 질병 확인/반문 질문 처리 (방광염은 아니야? 등)
+    # ============================================
+    if intent == "ask_disease_info":
+        disease_name = intent_data.get("disease_name")
+        cache = search_session_cache[user_id]
+        last_rec = cache.get("last_recommendation")
+
+        # DISEASE_INFO_DATABASE에서 질병 정보 가져오기
+        disease_info = DISEASE_INFO_DATABASE.get(disease_name)
+
+        if disease_info:
+            response_text = f"🔍 {disease_name} 정보\n\n"
+            response_text += f"📌 {disease_info['description']}\n\n"
+
+            # 주요 증상
+            response_text += f"📋 주요 증상:\n"
+            for symptom in disease_info["symptoms"][:5]:
+                response_text += f"  • {symptom}\n"
+            response_text += "\n"
+
+            # 이전 증상과 비교해서 설명
+            if last_rec and last_rec.get("symptoms"):
+                response_text += f"💬 말씀하신 '{last_rec['symptoms'][:20]}...' 증상과 비교:\n"
+                response_text += f"{disease_info['differentiator']}\n\n"
+
+                # 해당 질병 의심 조건
+                response_text += f"🤔 언제 의심해볼까요?\n"
+                response_text += f"{disease_info['when_to_suspect']}\n\n"
+            else:
+                response_text += f"🤔 {disease_name}을/를 의심해볼 때:\n"
+                response_text += f"{disease_info['when_to_suspect']}\n\n"
+
+            # 추천 진료과
+            dept = disease_info["department"]
+            response_text += f"🏥 추천 진료과: {dept}\n"
+
+            # 관련 질환
+            if disease_info.get("related_diseases"):
+                related = ", ".join(disease_info["related_diseases"][:3])
+                response_text += f"🔗 관련 질환: {related}\n"
+
+            # 빠른 응답
+            quick_replies = [
+                {"label": f"서울 {dept} 찾기", "message": f"서울 {dept} 찾아줘"},
+            ]
+
+            # 관련 질환 중 하나에 대해 물어보기
+            if disease_info.get("related_diseases"):
+                related = disease_info["related_diseases"][0]
+                if related in DISEASE_INFO_DATABASE:
+                    quick_replies.append({"label": f"{related}은?", "message": f"{related}은 아니야?"})
+
+            quick_replies.append({"label": "증상 다시 말하기", "message": "증상 분석해줘"})
+
+            return create_kakao_response(response_text, quick_replies=quick_replies)
+        else:
+            # DISEASE_INFO_DATABASE에 없는 질병
+            # 증상 분석기로 해당 질병에 대한 정보 가져오기 시도
+            diagnosis = symptom_analyzer.diagnose_disease(disease_name)
+
+            if diagnosis["has_diagnosis"]:
+                response_text = f"🔍 {disease_name} 관련 정보\n\n"
+
+                if diagnosis.get("recommended_departments"):
+                    depts = diagnosis["recommended_departments"]
+                    response_text += f"🏥 관련 진료과: {', '.join(depts[:2])}\n\n"
+
+                if diagnosis.get("diagnosis_description"):
+                    response_text += f"📌 {diagnosis['diagnosis_description']}\n\n"
+
+                response_text += f"💡 정확한 진단을 위해 병원을 방문해보세요!"
+
+                quick_replies = []
+                if diagnosis.get("recommended_departments"):
+                    dept = diagnosis["recommended_departments"][0]
+                    quick_replies.append({"label": f"서울 {dept} 찾기", "message": f"서울 {dept} 찾아줘"})
+                quick_replies.append({"label": "증상 다시 말하기", "message": "증상 분석해줘"})
+
+                return create_kakao_response(response_text, quick_replies=quick_replies)
+            else:
+                return create_kakao_response(
+                    f"'{disease_name}'에 대한 상세 정보가 없어요.\n\n"
+                    "증상을 자세히 말씀해주시면 더 정확하게 분석해드릴게요!",
+                    quick_replies=[
+                        {"label": "증상 말하기", "message": "증상이 어때요?"},
+                        {"label": "도움말", "message": "도움말"},
+                    ]
+                )
+
+    # ============================================
+    # 다른 진료과 추천 요청 처리
+    # ============================================
+    if intent == "suggest_other_departments":
+        cache = search_session_cache[user_id]
+        last_rec = cache.get("last_recommendation")
+
+        if last_rec and last_rec.get("departments") and len(last_rec["departments"]) > 1:
+            symptom_area = last_rec.get("symptom_area", "해당 증상")
+            symptoms = last_rec.get("symptoms", "")
+            all_depts = last_rec["departments"]
+
+            response_text = f"📋 다른 진료과 옵션\n\n"
+            response_text += f"'{symptoms}'에 대해 다른 진료과도 고려해볼 수 있어요:\n\n"
+
+            # 첫 번째 외의 다른 진료과 추천
+            for dept in all_depts[1:4]:
+                reason = get_department_reason(symptom_area, dept)
+                response_text += f"• {dept}: {reason}\n\n"
+
+            response_text += "💡 증상이 복잡하면 가정의학과에서 먼저 진찰받고 전문과로 의뢰받는 것도 좋아요!"
+
+            quick_replies = [
+                {"label": f"서울 {dept} 찾기", "message": f"서울 {dept} 찾아줘"}
+                for dept in all_depts[1:3]
+            ]
+            quick_replies.append({"label": "가정의학과 찾기", "message": "서울 가정의학과 찾아줘"})
+
+            return create_kakao_response(response_text, quick_replies=quick_replies)
+        elif last_rec and last_rec.get("departments"):
+            # 추천된 진료과가 1개뿐인 경우
+            dept = last_rec["departments"][0]
+            return create_kakao_response(
+                f"현재 증상에는 {dept}가 가장 적합해 보여요.\n\n"
+                "다른 증상이 더 있으시면 말씀해주세요!",
+                quick_replies=[
+                    {"label": f"서울 {dept} 찾기", "message": f"서울 {dept} 찾아줘"},
+                    {"label": "증상 추가하기", "message": "다른 증상도 있어요"},
+                ]
+            )
+        else:
+            return create_kakao_response(
+                "이전 증상 분석 기록이 없어요.\n\n"
+                "증상을 말씀해주시면 적합한 진료과를 추천해드릴게요!",
+                quick_replies=[
+                    {"label": "증상 말하기", "message": "배가 아파요"},
+                    {"label": "도움말", "message": "도움말"},
+                ]
+            )
 
     # ============================================
     # 추천 이유 설명 처리 (왜 OO과?)
